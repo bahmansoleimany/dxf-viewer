@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>نمایشگر نقشه</title>
+<meta name="theme-color" content="#14171c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="نمایشگر نقشه">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{--bg:#14171c;--bar:#1e232b;--line:#313a47;--tx:#e8ecf2;--mut:#93a0b3;--acc:#3ea6ff;--ok:#33c27f;--warn:#ffd23f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:system-ui,Vazirmatn,Tahoma,sans-serif;overscroll-behavior:none;font-size:14px}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+button{font:inherit;color:inherit;background:var(--bar);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:active{background:#2a313c}
+button.pri{background:var(--acc);border-color:var(--acc);color:#04121f;font-weight:700}
+button:disabled{opacity:.4}
+#top{display:flex;gap:6px;align-items:center;padding:6px 8px;padding-top:max(6px,env(safe-area-inset-top));background:var(--bar);border-bottom:1px solid var(--line)}
+#fname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mut);font-size:12px;direction:ltr;text-align:center}
+#wrap{flex:1;position:relative;min-height:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#cv{position:absolute;top:0;left:0;touch-action:none;display:block}
+#fab{position:absolute;left:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+#fab button{width:42px;height:42px;padding:0;font-size:20px;background:rgba(30,35,43,.92)}
+#empty{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:var(--mut);line-height:1.9}
+#empty b{color:var(--tx);font-size:18px}
+#empty button{font-size:16px;padding:12px 22px}
+#panel{background:var(--bar);border-top:1px solid var(--line);padding:8px 10px;max-height:44vh;overflow:auto;display:none}
+.r{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #28303b}
+.r span{color:var(--mut)}
+.r b{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:600;font-size:15px}
+.r.big b{color:var(--warn);font-size:17px}
+.hint,.sn{color:var(--mut);font-size:12.5px;padding:4px 0}
+.btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.btns button{flex:1;min-width:84px;padding:9px 6px}
+#tools{display:flex;overflow-x:auto;background:var(--bar);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#tools::-webkit-scrollbar{display:none}
+#tools .sep{flex:0 0 1px;background:var(--line);margin:6px 2px}
+#tools button{flex:1 0 auto;min-width:62px;border:0;border-radius:0;background:transparent;padding:8px 6px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
+#tools button i{font-style:normal;font-size:19px;line-height:1.1}
+#tools button.on{color:var(--acc);background:#232b36}
+#sheet{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:9}
+#sheet .box{background:var(--bar);width:100%;max-width:560px;max-height:78vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px;border:1px solid var(--line)}
+#sheet h3{margin:0 0 10px;font-size:16px}
+.lr{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #28303b}
+.lr .sw{width:16px;height:16px;border-radius:4px;border:1px solid #555;flex:none}
+.lr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right;white-space:nowrap}
+.lr .ct{color:var(--mut);font-size:12px}
+.lr input[type=checkbox]{width:20px;height:20px}
+select{font:inherit;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px}
+input[type=text],input[type=number]{font:inherit;font-size:16px;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;direction:rtl}
+.fl{display:flex;gap:8px;align-items:center;margin-top:8px}.fl label{color:var(--mut);white-space:nowrap}
+#brand{width:96px;height:96px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
+.ver{color:var(--mut);font-size:12px;line-height:1.9;padding-top:8px}
+</style>
+</head>
+<body>
+<script>window.addEventListener('error',function(e){var d=document.createElement('div');d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#b00020;color:#fff;padding:10px;font:13px monospace;direction:ltr;white-space:pre-wrap';d.textContent='ERR: '+(e.message||'')+' @'+(e.lineno||'');document.body.appendChild(d)})</script>
+<noscript style="color:#fff">جاوااسکریپت خاموش است.</noscript>
+<div id="app">
+  <div id="top">
+    <button class="pri" id="bOpen">📂 باز کردن</button>
+    <div id="fname">—</div>
+    <button id="bUndo" title="برگرداندن" disabled>↶</button>
+    <button id="bLayers">لایه‌ها</button>
+    <button id="bSet">⚙</button>
+  </div>
+  <div id="wrap">
+    <canvas id="cv"></canvas>
+    <div id="fab">
+      <button id="bFit" title="نمایش کامل">⤢</button>
+      <button id="bIn">＋</button>
+      <button id="bOut">−</button>
+    </div>
+    <div id="empty">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="brand">
+<defs>
+<linearGradient id="Zbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2260"/><stop offset=".55" stop-color="#141638"/><stop offset="1" stop-color="#060713"/></linearGradient>
+<radialGradient id="Zhl" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#7a6bff" stop-opacity=".35"/><stop offset="1" stop-color="#7a6bff" stop-opacity="0"/></radialGradient>
+<radialGradient id="Zsp" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fd0ff"/></radialGradient>
+<pattern id="Zgr" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#a79bff" stroke-opacity=".09" stroke-width="1.5"/></pattern>
+<filter id="Zgl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#Zbg)"/><rect width="512" height="512" rx="112" fill="url(#Zhl)"/><rect width="512" height="512" rx="112" fill="url(#Zgr)"/>
+<rect x="1.5" y="1.5" width="509" height="509" rx="110" fill="none" stroke="#ffffff" stroke-opacity=".16" stroke-width="3"/>
+<g transform="translate(256 262) scale(1.0) translate(-256 -262)">
+<g stroke="#8fb4ff" stroke-opacity=".38" stroke-width="2.5" fill="none">
+<polygon points="256,300 382,373 256,446 130,373" fill="#7a9bff" fill-opacity=".1" stroke-opacity=".55" stroke-width="3.5"/>
+<path d="M287.5,318.2L161.5,391.2M319,336.5L193,409.5M350.5,354.8L224.5,427.8"/>
+<path d="M224.5,318.2L350.5,391.2M193,336.5L319,409.5M161.5,354.8L287.5,427.8"/>
+</g>
+<g filter="url(#Zgl)" stroke-width="11" stroke-linecap="round">
+<path d="M256 300V140" stroke="#4da3ff"/><polygon points="256,110 241,142 271,142" fill="#4da3ff" stroke="none"/>
+<path d="M256 300L388 376" stroke="#ff5a5f"/><polygon points="414,391 380,389 395,363" fill="#ff5a5f" stroke="none"/>
+<path d="M256 300L124 376" stroke="#3ddc84"/><polygon points="98,391 117,363 132,389" fill="#3ddc84" stroke="none"/>
+</g>
+<g filter="url(#Zgl)">
+<circle cx="256" cy="300" r="46" fill="none" stroke="#ffd23f" stroke-width="4.5"/>
+<path d="M190 300H212M300 300H322" stroke="#ffd23f" stroke-width="4.5" stroke-linecap="round"/>
+<circle cx="256" cy="300" r="20" fill="url(#Zsp)"/>
+</g>
+<g font-family="DejaVu Sans,Arial,sans-serif" font-weight="700" font-size="36" text-anchor="middle">
+<text x="256" y="92" fill="#4da3ff">Z</text><text x="436" y="412" fill="#ff5a5f">X</text><text x="76" y="412" fill="#3ddc84">Y</text>
+</g>
+</g></svg>
+      <b>نمایشگر نقشه</b>
+      <div>فایل <span dir="ltr">DXF</span> را از حافظه گوشی انتخاب کنید.<br>فایل <span dir="ltr">DWG</span> را ابتدا باید به <span dir="ltr">DXF</span> تبدیل کنید.</div>
+      <button class="pri" id="bOpen2">📂 انتخاب فایل</button>
+      <button id="bDemo">نمونه‌ی آزمایشی</button>
+    </div>
+  </div>
+  <div id="panel"></div>
+  <div id="tools">
+    <button data-t="pan" class="on"><i>✋</i>حرکت</button>
+    <button data-t="id"><i>📍</i>مختصات</button>
+    <button data-t="dist"><i>📏</i>فاصله</button>
+    <button data-t="area"><i>⬚</i>مساحت</button>
+    <button data-t="angle"><i>∠</i>زاویه</button>
+    <button data-t="prop"><i>ℹ️</i>ویژگی</button>
+    <span class="sep"></span>
+    <button data-t="line"><i>╱</i>خط</button>
+    <button data-t="pl"><i>⌇</i>پلی‌لاین</button>
+    <button data-t="arc"><i>◠</i>کمان</button>
+    <button data-t="text"><i>Aa</i>متن</button>
+    <button data-t="del"><i>🗑</i>پاک</button>
+  </div>
+</div>
+<div id="sheet"><div class="box" id="sheetBox"></div></div>
+<input type="file" id="file" style="display:none">
+
+<script>
+/*PARSER_START*/
+const D2R=Math.PI/180;
+function hsv(h,s,v){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;let r,g,b;
+  if(h<60){r=c;g=x;b=0}else if(h<120){r=x;g=c;b=0}else if(h<180){r=0;g=c;b=x}else if(h<240){r=0;g=x;b=c}else if(h<300){r=x;g=0;b=c}else{r=c;g=0;b=x}
+  return (Math.round((r+m)*255)<<16)|(Math.round((g+m)*255)<<8)|Math.round((b+m)*255);}
+function aciRGB(n){
+  const base={1:0xff0000,2:0xffff00,3:0x00ff00,4:0x00ffff,5:0x0000ff,6:0xff00ff,7:0xffffff,8:0x808080,9:0xc0c0c0};
+  if(base[n]!==undefined)return base[n];
+  if(n>=250&&n<=255){const v=[51,91,132,173,214,255][n-250];return (v<<16)|(v<<8)|v}
+  if(n>=10&&n<=249){const hue=Math.floor((n-10)/10)*15,k=(n-10)%10;return hsv(hue,(k%2)?0.5:1,[1,0.65,0.5,0.3,0.15][k>>1])}
+  return 0xffffff;}
+function mul(A,B){return [A[0]*B[0]+A[2]*B[1],A[1]*B[0]+A[3]*B[1],A[0]*B[2]+A[2]*B[3],A[1]*B[2]+A[3]*B[3],A[0]*B[4]+A[2]*B[5]+A[4],A[1]*B[4]+A[3]*B[5]+A[5]];}
+function tr(M,x,y){return [M[0]*x+M[2]*y+M[4],M[1]*x+M[3]*y+M[5]];}
+function cleanT(s){return s.replace(/\\U\+([0-9A-Fa-f]{4})/g,(m,h)=>String.fromCharCode(parseInt(h,16))).replace(/%%[cC]/g,'Ø').replace(/%%[dD]/g,'°').replace(/%%[pP]/g,'±').replace(/%%[uUoO]/g,'');}
+function cleanMT(s){return cleanT(s).replace(/\\P/g,'\n').replace(/\\S([^;^\/#]*)[\^\/#]([^;]*);/g,'$1/$2').replace(/\\[Ff][^;]*;/g,'').replace(/\\[HhWwQqTtAaCc][^;]*;/g,'').replace(/\\[LlOoKk]/g,'').replace(/\\~/g,' ').replace(/\\\\/g,'\\').replace(/[{}]/g,'');}
+function bulgePts(x1,y1,x2,y2,b){
+  const d=Math.hypot(x2-x1,y2-y1);if(d<1e-12||Math.abs(b)<1e-12)return [];
+  const a=(d/2)*(1-b*b)/(2*b),nx=-(y2-y1)/d,ny=(x2-x1)/d,cx=(x1+x2)/2+nx*a,cy=(y1+y2)/2+ny*a;
+  const r=Math.hypot(x1-cx,y1-cy),a0=Math.atan2(y1-cy,x1-cx),sw=4*Math.atan(b);
+  const n=Math.max(2,Math.ceil(Math.abs(sw)/(Math.PI/48)));const o=[];
+  for(let i=1;i<n;i++){const t=a0+sw*i/n;o.push(cx+r*Math.cos(t),cy+r*Math.sin(t))}return o;}
+function deBoor(deg,knots,ctrl){
+  const n=ctrl.length,out=[];
+  if(knots.length!==n+deg+1||n<deg+1)return ctrl.map(c=>c.slice());
+  const t0=knots[deg],t1=knots[n],N=Math.max(24,Math.min(3000,n*14));
+  for(let i=0;i<=N;i++){
+    let t=t0+(t1-t0)*i/N;if(i===N)t=t1-1e-9*(t1-t0||1);
+    let k=deg;while(k<n-1&&knots[k+1]<=t)k++;
+    const d=[];for(let j=0;j<=deg;j++)d.push(ctrl[k-deg+j].slice());
+    for(let r=1;r<=deg;r++)for(let j=deg;j>=r;j--){
+      const den=knots[j+1+k-r]-knots[j+k-deg],al=den===0?0:(t-knots[j+k-deg])/den;
+      for(let q=0;q<3;q++)d[j][q]=(1-al)*d[j-1][q]+al*d[j][q];}
+    out.push(d[deg]);}
+  return out;}
+
+function parseDXF(text){
+  const Ls=text.split(/\r\n|\r|\n/);
+  const codes=[],vals=[];
+  for(let i=0;i+1<Ls.length;){
+    if(!/^\s*-?\d+\s*$/.test(Ls[i])){i++;continue}
+    codes.push(parseInt(Ls[i],10));vals.push(Ls[i+1]);i+=2;}
+  const N=codes.length;
+  const items={TABLES:[],BLOCKS:[],ENTITIES:[]};let curSec=null,units=0,i=0;
+  while(i<N){
+    if(codes[i]===0){
+      const t=vals[i].trim();
+      if(t==='SECTION'){curSec=(i+1<N&&codes[i+1]===2)?vals[i+1].trim():null;i+=2;continue}
+      if(t==='ENDSEC'){curSec=null;i++;continue}
+      if(t==='EOF')break;
+      let j=i+1;while(j<N&&codes[j]!==0)j++;
+      if(curSec&&items[curSec])items[curSec].push({t,s:i+1,e:j});
+      i=j;continue;}
+    if(curSec==='HEADER'&&codes[i]===9&&vals[i].trim()==='$INSUNITS'&&i+1<N)units=parseInt(vals[i+1])||0;
+    i++;}
+  const gs=(it,c)=>{for(let k=it.s;k<it.e;k++)if(codes[k]===c)return vals[k];return undefined};
+  const gf=(it,c,d)=>{const v=gs(it,c);if(v===undefined)return d;const x=parseFloat(v);return isNaN(x)?d:x};
+  const layers={};
+  const getLayer=n=>layers[n]||(layers[n]={name:n,color:0xffffff,on:true,count:0});
+  for(const it of items.TABLES){if(it.t!=='LAYER')continue;
+    const L=getLayer((gs(it,2)||'0').trim()),aci=gf(it,62,7),fl=gf(it,70,0),tc=gs(it,420);
+    L.color=tc!==undefined?(parseInt(tc)&0xffffff):aciRGB(Math.abs(aci));
+    L.on=aci>=0&&!(fl&1);}
+  const blocks={};let cb=null;
+  for(const it of items.BLOCKS){
+    if(it.t==='BLOCK'){cb={name:(gs(it,2)||'').trim(),bx:gf(it,10,0),by:gf(it,20,0),items:[]};blocks[cb.name]=cb}
+    else if(it.t==='ENDBLK')cb=null;else if(cb)cb.items.push(it);}
+  const prims=[],texts=[],sx=[],sy=[],sz=[],st=[],sl=[],so=[],skipped={},counts={};
+  const SILENT={SEQEND:1,VERTEX:1,ATTDEF:1,VIEWPORT:1,XLINE:1,RAY:1,IMAGE:1,MLINE:1,MLEADER:1,WIPEOUT:1,OLE2FRAME:1};
+  function style(it,ctx){
+    let ln=gs(it,8);ln=ln===undefined?'0':ln.trim();if(ln==='0'&&ctx.layer)ln=ctx.layer;
+    const L=getLayer(ln),tc=gs(it,420),aci=gf(it,62,256);let col;
+    if(tc!==undefined)col=parseInt(tc)&0xffffff;else if(aci===256)col=L.color;else if(aci===0)col=ctx.color;else col=aciRGB(Math.abs(aci));
+    return {L,col};}
+  function addSnap(sty,x,y,z,t,own){sx.push(x);sy.push(y);sz.push(z);st.push(t);sl.push(sty.L);so.push(own||null)}
+  function EXI(ctx,M,t,c,z,r,a0,a1){return (M===ctx.M&&ctx.M[0]===1&&ctx.M[1]===0&&ctx.M[2]===0&&ctx.M[3]===1)?{t,c:[c[0],c[1],z],r,a0,a1}:undefined}
+  function addPoly(flat,closed,sty,type,snaps,extra){
+    let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
+    for(let i=0;i<flat.length;i+=2){const x=flat[i],y=flat[i+1];if(!(isFinite(x)&&isFinite(y)))return;
+      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+    const info=extra||{};info.type=type;
+    const pr={pts:flat,closed,L:sty.L,col:sty.col,bb:[x0,y0,x1,y1],info};prims.push(pr);sty.L.count++;counts[type]=(counts[type]||0)+1;
+    if(snaps)for(const q of snaps)addSnap(sty,q[0],q[1],q[2],q[3],pr);}
+  function ocs(it,M){
+    const ex=gf(it,210,0),ey=gf(it,220,0),ez=gf(it,230,1);if(ex===0&&ey===0&&ez>0)return M;
+    const nl=Math.hypot(ex,ey,ez)||1,zx=ex/nl,zy=ey/nl,zz=ez/nl;let ax,ay,az;
+    if(Math.abs(zx)<1/64&&Math.abs(zy)<1/64){ax=zz;ay=0;az=-zx}else{ax=-zy;ay=zx;az=0}
+    const al=Math.hypot(ax,ay,az)||1;ax/=al;ay/=al;az/=al;
+    return mul(M,[ax,ay,zy*az-zz*ay,zz*ax-zx*az,0,0]);}
+  function polyFromVerts(v,closed,M,z,sty,type){
+    const n=v.length;if(n<2)return;const flat=[],snaps=[],arcs=[];
+    const segs=closed?n:n-1;
+    for(let i=0;i<segs;i++){
+      const p1=v[i],p2=v[(i+1)%n],a=tr(M,p1.x,p1.y);flat.push(a[0],a[1]);
+      const zz=(p1.z!==undefined?p1.z:z);snaps.push([a[0],a[1],zz,'e']);
+      if(p1.b){const k0=flat.length/2-1;const ip=bulgePts(p1.x,p1.y,p2.x,p2.y,p1.b);for(let k=0;k<ip.length;k+=2){const q=tr(M,ip[k],ip[k+1]);flat.push(q[0],q[1])}arcs.push([k0,(i===n-1&&closed)?0:flat.length/2])}
+      else{const b=tr(M,p2.x,p2.y);snaps.push([(a[0]+b[0])/2,(a[1]+b[1])/2,zz,'m'])}}
+    if(!closed){const p=v[n-1],a=tr(M,p.x,p.y);flat.push(a[0],a[1]);snaps.push([a[0],a[1],p.z!==undefined?p.z:z,'e'])}
+    addPoly(flat,closed,sty,type,snaps,arcs.length?{arcs}:undefined);}
+  function doText(it,ctx,mt){
+    if(it.t==='ATTRIB'&&(gf(it,70,0)&1))return;
+    const sty=style(it,ctx);let str,x,y,h,rot,ah='left',av='alphabetic',M2,ix,iy;
+    if(mt){let s='';for(let k=it.s;k<it.e;k++)if(codes[k]===3)s+=vals[k];s+=gs(it,1)||'';str=cleanMT(s);
+      x=ix=gf(it,10,0);y=iy=gf(it,20,0);h=gf(it,40,1);M2=ctx.M;
+      const dx=gs(it,11);rot=dx!==undefined?Math.atan2(gf(it,21,0),parseFloat(dx)):gf(it,50,0)*D2R;
+      const ap=gf(it,71,1);ah=['left','center','right'][((ap-1)%3+3)%3];av=ap<=3?'top':ap<=6?'middle':'bottom';}
+    else{str=cleanT(gs(it,1)||'');M2=ocs(it,ctx.M);ix=gf(it,10,0);iy=gf(it,20,0);
+      const a72=gf(it,72,0),a73=gf(it,73,0);
+      if(a72||a73){x=gf(it,11,ix);y=gf(it,21,iy)}else{x=ix;y=iy}
+      h=gf(it,40,1);rot=gf(it,50,0)*D2R;ah=(a72===1||a72===4)?'center':a72===2?'right':'left';
+      av=a73===1?'bottom':a73===2?'middle':a73===3?'top':'alphabetic';if(a72===4)av='middle';}
+    if(!str.trim())return;
+    const p=tr(M2,x,y),sc=Math.sqrt(Math.abs(M2[0]*M2[3]-M2[1]*M2[2]))||1;
+    if(!(isFinite(p[0])&&isFinite(p[1])))return;
+    const tx={x:p[0],y:p[1],h:h*sc,rot:rot+Math.atan2(M2[1],M2[0]),s:str,col:sty.col,L:sty.L,ah,av,z:gf(it,30,0)+ctx.z};texts.push(tx);sty.L.count++;{const tn=mt?'MTEXT':'TEXT';counts[tn]=(counts[tn]||0)+1}
+    const q=tr(M2,ix,iy);addSnap(sty,q[0],q[1],gf(it,30,0)+ctx.z,'i',tx);}
+  function doInsert(it,ctx,sty,isDim){
+    const blk=blocks[(gs(it,2)||'').trim()];if(!blk||ctx.depth>8)return;
+    if(isDim){convert(blk.items,{M:ctx.M,color:sty.col,layer:sty.L.name,depth:ctx.depth+1,z:ctx.z});return}
+    const M0=ocs(it,ctx.M),ix=gf(it,10,0),iy=gf(it,20,0),iz=gf(it,30,0);
+    const sxx=gf(it,41,1),syy=gf(it,42,1),rot=gf(it,50,0)*D2R;
+    const nc=Math.max(1,gf(it,70,1)|0),nr=Math.max(1,gf(it,71,1)|0),dc=gf(it,44,0),dr=gf(it,45,0);
+    if(nc*nr>5000)return;
+    const c=Math.cos(rot),s=Math.sin(rot);
+    for(let r=0;r<nr;r++)for(let q=0;q<nc;q++){
+      let Mi=mul(M0,[1,0,0,1,ix,iy]);Mi=mul(Mi,[c,s,-s,c,0,0]);Mi=mul(Mi,[1,0,0,1,q*dc,r*dr]);
+      Mi=mul(Mi,[sxx,0,0,syy,0,0]);Mi=mul(Mi,[1,0,0,1,-blk.bx,-blk.by]);
+      if(ctx.depth===0){const p=tr(Mi,blk.bx,blk.by);addSnap(sty,p[0],p[1],iz+ctx.z,'i')}
+      convert(blk.items,{M:Mi,color:sty.col,layer:sty.L.name,depth:ctx.depth+1,z:ctx.z+iz});}}
+  function convert(list,ctx){
+    for(let k=0;k<list.length;k++){
+      const it=list[k];
+      if(ctx.depth===0&&gf(it,67,0)===1)continue;
+      switch(it.t){
+      case 'LINE':{const sty=style(it,ctx),M=ctx.M,a=tr(M,gf(it,10,0),gf(it,20,0)),b=tr(M,gf(it,11,0),gf(it,21,0));
+        const z1=gf(it,30,0)+ctx.z,z2=gf(it,31,0)+ctx.z;
+        addPoly([a[0],a[1],b[0],b[1]],false,sty,'LINE',[[a[0],a[1],z1,'e'],[b[0],b[1],z2,'e'],[(a[0]+b[0])/2,(a[1]+b[1])/2,(z1+z2)/2,'m']],{z:[z1,z2]});break}
+      case 'LWPOLYLINE':{const sty=style(it,ctx),v=[];
+        for(let q=it.s;q<it.e;q++){const c=codes[q];
+          if(c===10)v.push({x:parseFloat(vals[q]),y:0,b:0});else if(c===20&&v.length)v[v.length-1].y=parseFloat(vals[q]);else if(c===42&&v.length)v[v.length-1].b=parseFloat(vals[q])}
+        polyFromVerts(v,!!(gf(it,70,0)&1),ocs(it,ctx.M),gf(it,38,0)+ctx.z,sty,'LWPOLYLINE');break}
+      case 'POLYLINE':{const vs=[];let m=k+1;while(m<list.length&&list[m].t==='VERTEX'){vs.push(list[m]);m++}
+        if(m<list.length&&list[m].t==='SEQEND')m++;k=m-1;
+        const fl=gf(it,70,0);if(fl&(16|64))break;const sty=style(it,ctx),is3=!!(fl&8);
+        const v=[];for(const q of vs){if(gf(q,70,0)&16)continue;v.push({x:gf(q,10,0),y:gf(q,20,0),b:gf(q,42,0),z:is3?gf(q,30,0)+ctx.z:undefined})}
+        polyFromVerts(v,!!(fl&1),is3?ctx.M:ocs(it,ctx.M),gf(it,30,0)+ctx.z,sty,is3?'POLYLINE3D':'POLYLINE');break}
+      case 'CIRCLE':{const sty=style(it,ctx),M=ocs(it,ctx.M),cx=gf(it,10,0),cy=gf(it,20,0),r=gf(it,40,0);if(!(r>0))break;
+        const n=192,flat=[];for(let q=0;q<n;q++){const t=2*Math.PI*q/n,p=tr(M,cx+r*Math.cos(t),cy+r*Math.sin(t));flat.push(p[0],p[1])}
+        const c=tr(M,cx,cy),sc=Math.sqrt(Math.abs(M[0]*M[3]-M[1]*M[2]))||1;
+        addPoly(flat,true,sty,'CIRCLE',[[c[0],c[1],gf(it,30,0)+ctx.z,'c']],{r:r*sc,area:Math.PI*r*sc*r*sc,len:2*Math.PI*r*sc,c:[c[0],c[1],gf(it,30,0)+ctx.z],ex:EXI(ctx,M,"C",c,gf(it,30,0)+ctx.z,r,0,0)});break}
+      case 'ARC':{const sty=style(it,ctx),M=ocs(it,ctx.M),cx=gf(it,10,0),cy=gf(it,20,0),r=gf(it,40,0);if(!(r>0))break;
+        const a0=gf(it,50,0)*D2R;let sw=gf(it,51,360)*D2R-a0;while(sw<=0)sw+=2*Math.PI;
+        const n=Math.max(4,Math.ceil(sw/(2*Math.PI)*192)),flat=[];
+        for(let q=0;q<=n;q++){const t=a0+sw*q/n,p=tr(M,cx+r*Math.cos(t),cy+r*Math.sin(t));flat.push(p[0],p[1])}
+        const z=gf(it,30,0)+ctx.z,c=tr(M,cx,cy),mm=tr(M,cx+r*Math.cos(a0+sw/2),cy+r*Math.sin(a0+sw/2)),sc=Math.sqrt(Math.abs(M[0]*M[3]-M[1]*M[2]))||1;
+        addPoly(flat,false,sty,'ARC',[[c[0],c[1],z,'c'],[flat[0],flat[1],z,'e'],[flat[flat.length-2],flat[flat.length-1],z,'e'],[mm[0],mm[1],z,'m']],{r:r*sc,len:r*sc*sw,sw,c:[c[0],c[1],z],ex:EXI(ctx,M,"A",c,z,r,gf(it,50,0),gf(it,51,360))});break}
+      case 'ELLIPSE':{const sty=style(it,ctx),M=ctx.M,cx=gf(it,10,0),cy=gf(it,20,0),mx=gf(it,11,0),my=gf(it,21,0),ra=gf(it,40,1);
+        let t0=gf(it,41,0),t1=gf(it,42,2*Math.PI);const sg=gf(it,230,1)<0?-1:1;if(t1<=t0)t1+=2*Math.PI;
+        const sw=t1-t0,n=Math.max(8,Math.ceil(sw/(2*Math.PI)*160)),flat=[];
+        for(let q=0;q<=n;q++){const t=t0+sw*q/n,p=tr(M,cx+Math.cos(t)*mx+Math.sin(t)*ra*(-my)*sg,cy+Math.cos(t)*my+Math.sin(t)*ra*mx*sg);flat.push(p[0],p[1])}
+        const full=Math.abs(sw-2*Math.PI)<1e-6,c=tr(M,cx,cy),z=gf(it,30,0)+ctx.z,sn=[[c[0],c[1],z,'c']];
+        if(!full){sn.push([flat[0],flat[1],z,'e'],[flat[flat.length-2],flat[flat.length-1],z,'e'])}
+        if(full){flat.pop();flat.pop()}addPoly(flat,full,sty,'ELLIPSE',sn);break}
+      case 'POINT':{const sty=style(it,ctx),p=tr(ctx.M,gf(it,10,0),gf(it,20,0)),z=gf(it,30,0)+ctx.z;
+        addPoly([p[0],p[1]],false,sty,'POINT',[[p[0],p[1],z,'n']],{z:[z]});break}
+      case 'TEXT':case 'ATTRIB':doText(it,ctx,false);break;
+      case 'MTEXT':doText(it,ctx,true);break;
+      case 'INSERT':{const sty=style(it,ctx);doInsert(it,ctx,sty,false);
+        let m=k+1;if(m<list.length&&list[m].t==='ATTRIB'){while(m<list.length&&list[m].t==='ATTRIB'){doText(list[m],ctx,false);m++}
+          if(m<list.length&&list[m].t==='SEQEND')m++;k=m-1}break}
+      case 'DIMENSION':{const sty=style(it,ctx);doInsert(it,ctx,sty,true);break}
+      case 'SOLID':case 'TRACE':{const sty=style(it,ctx),M=ocs(it,ctx.M),P=[];
+        for(let q=0;q<4;q++)P.push(tr(M,gf(it,10+q,0),gf(it,20+q,0)));
+        const z=gf(it,30,0)+ctx.z,order=(P[2][0]===P[3][0]&&P[2][1]===P[3][1])?[0,1,2]:[0,1,3,2],flat=[],sn=[];
+        for(const o of order){flat.push(P[o][0],P[o][1]);sn.push([P[o][0],P[o][1],z,'e'])}addPoly(flat,true,sty,it.t,sn);break}
+      case '3DFACE':{const sty=style(it,ctx),P=[];
+        for(let q=0;q<4;q++)P.push([...tr(ctx.M,gf(it,10+q,0),gf(it,20+q,0)),gf(it,30+q,0)+ctx.z]);
+        const tri=(P[2][0]===P[3][0]&&P[2][1]===P[3][1]),flat=[],sn=[];
+        for(let q=0;q<(tri?3:4);q++){flat.push(P[q][0],P[q][1]);sn.push([P[q][0],P[q][1],P[q][2],'e'])}addPoly(flat,true,sty,'3DFACE',sn);break}
+      case 'SPLINE':{const sty=style(it,ctx),deg=gf(it,71,3),kn=[],ct=[],fit=[];
+        for(let q=it.s;q<it.e;q++){const c=codes[q],v=parseFloat(vals[q]);
+          if(c===40)kn.push(v);else if(c===10)ct.push([v,0,0]);else if(c===20&&ct.length)ct[ct.length-1][1]=v;else if(c===30&&ct.length)ct[ct.length-1][2]=v;
+          else if(c===11)fit.push([v,0,0]);else if(c===21&&fit.length)fit[fit.length-1][1]=v;else if(c===31&&fit.length)fit[fit.length-1][2]=v}
+        let pts=ct.length>=2?deBoor(deg,kn,ct):fit;if(pts.length<2)break;
+        const flat=[];for(const p of pts){const a=tr(ctx.M,p[0],p[1]);flat.push(a[0],a[1])}
+        addPoly(flat,false,sty,'SPLINE',[[flat[0],flat[1],pts[0][2]+ctx.z,'e'],[flat[flat.length-2],flat[flat.length-1],pts[pts.length-1][2]+ctx.z,'e']]);break}
+      case 'LEADER':{const sty=style(it,ctx),v=[];
+        for(let q=it.s;q<it.e;q++){const c=codes[q];if(c===10)v.push({x:parseFloat(vals[q]),y:0});else if(c===20&&v.length)v[v.length-1].y=parseFloat(vals[q])}
+        polyFromVerts(v,false,ctx.M,ctx.z,sty,'LEADER');break}
+      case 'HATCH':{const sty=style(it,ctx),M=ocs(it,ctx.M),z=gf(it,30,0)+ctx.z;let k2=it.s;
+        const nx=c=>{while(k2<it.e&&codes[k2]!==c)k2++;return k2<it.e?vals[k2++]:undefined};
+        const np=parseInt(nx(91))||0;
+        for(let pi=0;pi<np;pi++){const fl=parseInt(nx(92));if(isNaN(fl))break;
+          if(fl&2){const hb=parseInt(nx(72)),nc=nx(73),nv=parseInt(nx(93))||0,v=[];
+            for(let i=0;i<nv;i++){const x=parseFloat(nx(10)),y=parseFloat(nx(20));v.push({x,y,b:hb?parseFloat(nx(42)):0})}
+            polyFromVerts(v,true,M,z,sty,'HATCH')}
+          else{const ne=parseInt(nx(93))||0,flat=[];let ok=true;
+            for(let e=0;e<ne;e++){const et=parseInt(nx(72));
+              if(et===1){const a=tr(M,parseFloat(nx(10)),parseFloat(nx(20))),b=tr(M,parseFloat(nx(11)),parseFloat(nx(21)));flat.push(a[0],a[1],b[0],b[1])}
+              else if(et===2){const cx=parseFloat(nx(10)),cy=parseFloat(nx(20)),r=parseFloat(nx(40));let a0=parseFloat(nx(50))*D2R,a1=parseFloat(nx(51))*D2R;const ccw=parseInt(nx(73));
+                if(!ccw){const t=a0;a0=a1;a1=t}let sw=a1-a0;while(sw<=0)sw+=2*Math.PI;const n=Math.max(4,Math.ceil(sw/(Math.PI/48)));
+                for(let q=0;q<=n;q++){const t=a0+sw*q/n,p=tr(M,cx+r*Math.cos(t),cy+r*Math.sin(t));flat.push(p[0],p[1])}}
+              else{ok=false;break}}
+            if(ok&&flat.length>=6)addPoly(flat,true,sty,'HATCH',null);
+            else if(!ok){skipped.HATCH_EDGE=(skipped.HATCH_EDGE||0)+1;break}}}
+        break}
+      default:if(!SILENT[it.t])skipped[it.t]=(skipped[it.t]||0)+1;}}}
+  convert(items.ENTITIES,{M:[1,0,0,1,0,0],color:0xffffff,layer:null,depth:0,z:0});
+  const map=new Map();for(const p of prims){let a=map.get(p.col);if(!a){a=[];map.set(p.col,a)}a.push(p)}
+  const buckets=[...map].map(([col,list])=>({col,list}));
+  return {prims,texts,buckets,layers:Object.values(layers).sort((a,b)=>a.name<b.name?-1:1),sx,sy,sz,st,sl,so,units,skipped,counts};
+}
+/*PARSER_END*/
+
+/* ================= UI ================= */
+const $=id=>document.getElementById(id);
+const cv=$('cv'),g=cv.getContext('2d');
+let W=0,H=0,dpr=1,DB=null,fileName='—';
+const view={cx:0,cy:0,s:1};
+const APP_VER='1.1.0';
+const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true};
+let tool='pan',pts=[],tent=null,log=[],sel=null,hover=null,prec=null,holdT=null,hist=[],selSeg=0,pickSeg=0;
+const UNITS={1:'اینچ',2:'فوت',4:'mm',5:'cm',6:'m',7:'km'};
+const w2s=(x,y)=>[(x-view.cx)*view.s+W/2,H/2-(y-view.cy)*view.s];
+const s2w=(px,py)=>[(px-W/2)/view.s+view.cx,view.cy-(py-H/2)/view.s];
+const css=c=>'#'+(c&0xffffff).toString(16).padStart(6,'0');
+const dispCol=c=>{if(c===0xffffff&&!S.dark)return '#000000';if(c===0&&S.dark)return '#ffffff';return css(c)};
+let raf=0;function req(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;draw()})}
+
+function resize(){const r=$('wrap').getBoundingClientRect();dpr=window.devicePixelRatio||1;const oW=W,oH=H;W=r.width;H=r.height;
+  if(DB&&oW>0&&oH>0&&view.s>0){view.cx+=(W-oW)/(2*view.s);view.cy+=(oH-H)/(2*view.s)}   // گوشه‌ی بالا-چپ ثابت می‌ماند تا با باز/بسته شدن پنل، نقشه زیر انگشت نپرد
+
+  cv.width=Math.max(1,Math.round(W*dpr));cv.height=Math.max(1,Math.round(H*dpr));cv.style.width=W+'px';cv.style.height=H+'px';req()}
+new ResizeObserver(resize).observe($('wrap'));window.addEventListener('resize',resize);
+
+function draw(){
+  g.setTransform(dpr,0,0,dpr,0,0);
+  drawScene(view,W,H);
+  if(DB){drawOverlay();drawLoupe()}
+}
+function drawScene(view,W,H){
+  g.fillStyle=S.dark?'#0b0d10':'#ffffff';g.fillRect(0,0,W,H);
+  if(!DB)return;
+  const w2s=(x,y)=>[(x-view.cx)*view.s+W/2,H/2-(y-view.cy)*view.s];
+  const s=view.s,hw=W/2/s,hh=H/2/s,x0=view.cx-hw,x1=view.cx+hw,y0=view.cy-hh,y1=view.cy+hh;
+  g.lineWidth=1;g.lineJoin='round';
+  for(const bk of DB.buckets){
+    g.strokeStyle=dispCol(bk.col);g.beginPath();
+    for(const p of bk.list){
+      if(!p.L.on||p.del)continue;const b=p.bb;if(b[2]<x0||b[0]>x1||b[3]<y0||b[1]>y1)continue;
+      const P=p.pts,n=P.length;
+      if(n===2){const sx=(P[0]-view.cx)*s+W/2,sy=H/2-(P[1]-view.cy)*s;g.moveTo(sx-3,sy);g.lineTo(sx+3,sy);g.moveTo(sx,sy-3);g.lineTo(sx,sy+3);continue}
+      if((b[2]-b[0])*s<0.6&&(b[3]-b[1])*s<0.6)continue;
+      g.moveTo((P[0]-view.cx)*s+W/2,H/2-(P[1]-view.cy)*s);
+      for(let i=2;i<n;i+=2)g.lineTo((P[i]-view.cx)*s+W/2,H/2-(P[i+1]-view.cy)*s);
+      if(p.closed)g.closePath();}
+    g.stroke();}
+  // texts
+  g.textBaseline='alphabetic';
+  for(const t of DB.texts){
+    if(!t.L.on||t.del)continue;const px=t.h*s;if(px<3.5)continue;
+    if(t.x<x0-t.h*40||t.x>x1+t.h*40||t.y<y0-t.h*40||t.y>y1+t.h*40)continue;
+    const [sx,sy]=w2s(t.x,t.y);g.save();g.translate(sx,sy);g.rotate(-t.rot);
+    g.fillStyle=dispCol(t.col);g.font=px+'px sans-serif';g.textAlign=t.ah;
+    const lines=t.s.split('\n'),lh=px*1.35,n=lines.length;
+    let off=0;if(t.av==='middle')off=-(n-1)*lh/2;else if(t.av==='bottom')off=-(n-1)*lh;
+    g.textBaseline=t.av;
+    for(let i=0;i<n;i++)g.fillText(lines[i],0,off+i*lh);
+    g.restore();}
+  if(sel&&sel.s!==undefined){const [a,b]=w2s(sel.x,sel.y);g.strokeStyle='#ffd23f';g.lineWidth=3;g.strokeRect(a-10,b-10,20,20);g.lineWidth=1}
+  else if(sel){g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();const P=sel.pts;
+    if(P.length===2){const [a,b]=w2s(P[0],P[1]);g.arc(a,b,8,0,7)}else{let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(sel.closed)g.closePath()}
+    g.stroke();g.lineWidth=1}
+}
+function marker(x,y,t,col){const [a,b]=w2s(x,y);markerPx(a,b,t,col)}
+function markerPx(a,b,t,col){
+  g.strokeStyle=col;g.lineWidth=2;g.beginPath();
+  if(t){if(t==='m'){g.moveTo(a-8,b+7);g.lineTo(a+8,b+7);g.lineTo(a,b-8);g.closePath()}else if(t==='c'){g.arc(a,b,8,0,7)}else{g.rect(a-8,b-8,16,16)}}
+  g.moveTo(a-16,b);g.lineTo(a-4,b);g.moveTo(a+4,b);g.lineTo(a+16,b);g.moveTo(a,b-16);g.lineTo(a,b-4);g.moveTo(a,b+4);g.lineTo(a,b+16);
+  g.stroke();g.lineWidth=1}
+/* حالت زنده: هنگام نگه‌داشتن/کشیدن، نقطه‌ی در حال جابه‌جایی جایگزین نقطه‌ی قبلی می‌شود */
+function curState(){
+  if(!prec)return {pts,tent,log};
+  const sn=prec.snap,d=prec.drag;
+  if(d){
+    if(d.k==='pts')return {pts:pts.map((p,i)=>i===d.i?sn:p),tent,log};
+    if(d.k==='tent')return {pts,tent:sn,log};
+    if(d.k==='log')return {pts,tent,log:log.map((p,i)=>i===d.i?sn:p)};}
+  return {pts,tent:sn,log};}
+function drawLoupe(){
+  if(!prec)return;
+  const L=Math.round(Math.min(160,W*0.44)),Z=6;let lx=8,ly=8;
+  if(prec.x<L+36&&prec.y<L+36)lx=W-L-8;          // اگر انگشت نزدیک گوشه‌ی چپ است، ذره‌بین می‌رود راست
+  const [wx,wy]=s2w(prec.x,prec.y),sn=prec.snap;
+  g.save();g.beginPath();g.rect(lx,ly,L,L);g.clip();g.translate(lx,ly);
+  drawScene({cx:wx,cy:wy,s:view.s*Z},L,L);
+  const k=view.s*Z,sx=L/2+(sn.x-wx)*k,sy=L/2-(sn.y-wy)*k;
+  g.strokeStyle='rgba(255,210,63,.9)';g.lineWidth=1;g.beginPath();
+  g.moveTo(L/2-10,L/2);g.lineTo(L/2+10,L/2);g.moveTo(L/2,L/2-10);g.lineTo(L/2,L/2+10);g.stroke();   // مرکز = نوک انگشت
+  if(sn.t)markerPx(sx,sy,sn.t,'#33ff99');
+  g.fillStyle='rgba(10,12,16,.82)';g.fillRect(0,L-34,L,34);
+  g.fillStyle='#e8ecf2';g.font='11px ui-monospace,Menlo,monospace';g.textAlign='left';g.textBaseline='alphabetic';
+  g.fillText('X '+f(sn.x),5,L-20);g.fillText('Y '+f(sn.y),5,L-6);
+  if(sn.t){g.fillStyle='#33ff99';g.textAlign='right';g.fillText({e:'END',m:'MID',c:'CEN',i:'INS',n:'PNT'}[sn.t]||'',L-5,L-6)}
+  g.restore();
+  g.strokeStyle='#3ea6ff';g.lineWidth=2;g.strokeRect(lx,ly,L,L);g.lineWidth=1}
+function drawOverlay(){
+  if(!DB||tool==='pan')return;
+  const {pts,tent,log}=curState();
+  const live=tent?pts.concat([tent]):pts;
+  if(tool==='dist'||tool==='area'||tool==='angle'||tool==='line'||tool==='pl'||tool==='arc'){
+    if(live.length>=2){g.strokeStyle='#ffd23f';g.lineWidth=2;g.beginPath();
+      live.forEach((p,i)=>{const [a,b]=w2s(p.x,p.y);i?g.lineTo(a,b):g.moveTo(a,b)});
+      if(tool==='area'&&live.length>=3){g.closePath();g.fillStyle='rgba(255,210,63,.18)';g.fill()}
+      g.stroke();g.lineWidth=1}
+    if(tool==='arc'&&live.length>=3){const A=arc3(live[0],live[1],live[2]);if(A){g.strokeStyle='#ff9f1c';g.lineWidth=3;g.beginPath();const n=Math.max(8,Math.ceil(Math.abs(A.sw)/(Math.PI/90)));for(let q=0;q<=n;q++){const t=A.a0+A.sw*q/n,[a,b]=w2s(A.cx+A.r*Math.cos(t),A.cy+A.r*Math.sin(t));q?g.lineTo(a,b):g.moveTo(a,b)}g.stroke();g.lineWidth=1;const [ca,cb]=w2s(A.cx,A.cy);markerPx(ca,cb,'c','#ff9f1c')}}
+    if(tool==='dist'){g.font='12px sans-serif';g.textAlign='center';g.fillStyle='#ffd23f';
+      for(let i=1;i<live.length;i++){const a=live[i-1],b=live[i],[mx,my]=w2s((a.x+b.x)/2,(a.y+b.y)/2);g.fillText(Math.hypot(b.x-a.x,b.y-a.y).toFixed(S.dec),mx,my-6)}}
+    g.font='bold 12px sans-serif';g.textAlign='left';
+    pts.forEach((p,i)=>{const [a,b]=w2s(p.x,p.y);g.fillStyle='#ffd23f';g.beginPath();g.arc(a,b,4,0,7);g.fill();g.fillText(String(i+1),a+7,b-7)});}
+  if(tool==='id'){g.font='bold 12px sans-serif';g.textAlign='left';
+    log.forEach((p,i)=>{const [a,b]=w2s(p.x,p.y);g.fillStyle='#33c27f';g.beginPath();g.arc(a,b,4,0,7);g.fill();g.fillText(String(i+1),a+7,b-7)})}
+  if(tent)marker(tent.x,tent.y,tent.t,tent.t?'#33ff99':'#3ea6ff');
+  else if(hover)marker(hover.x,hover.y,hover.t,hover.t?'#33ff99':'#7a8aa0');
+}
+
+/* ---- snap / pick ---- */
+const snapOK=t=>S.snap&&((t==='m')?S.snapM:(t==='c')?S.snapC:S.snapE);
+function snapAt(px,py){
+  const [wx,wy]=s2w(px,py);let best=-1,bd=1e18;const R=26;
+  if(DB&&S.snap){const rw=R/view.s,x0=wx-rw,x1=wx+rw,y0=wy-rw,y1=wy+rw,{sx,sy,st,sl,so}=DB;
+    for(let i=0,n=sx.length;i<n;i++){const x=sx[i];if(x<x0||x>x1)continue;const y=sy[i];if(y<y0||y>y1)continue;
+      const t=st[i];if(!sl[i].on||!snapOK(t))continue;const ow=so[i];if(ow&&ow.del)continue;
+      const d=Math.hypot(x-wx,y-wy)*view.s+(t==='m'?5:t==='c'?2:0);if(d<bd&&d<=R){bd=d;best=i}}}
+  if(best>=0)return {x:DB.sx[best],y:DB.sy[best],z:DB.sz[best],t:DB.st[best]};
+  return {x:wx,y:wy,z:0,t:null};}
+function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-ax-t*dx,py-ay-t*dy)}
+function pickEntity(px,py){
+  const [wx,wy]=s2w(px,py),tol=16/view.s;let best=null,bd=tol,bs=0;
+  for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;if(wx<b[0]-tol||wx>b[2]+tol||wy<b[1]-tol||wy>b[3]+tol)continue;
+    const P=p.pts,n=P.length;
+    if(n===2){const d=Math.hypot(P[0]-wx,P[1]-wy);if(d<bd){bd=d;best=p;bs=0}continue}
+    const m=p.closed?n:n-2;
+    for(let i=0;i<m;i+=2){const j=(i+2)%n,d=distSeg(wx,wy,P[i],P[i+1],P[j],P[j+1]);if(d<bd){bd=d;best=p;bs=i/2}}}
+  for(const t of DB.texts){if(!t.L.on||t.del)continue;const d=Math.hypot(t.x-wx,t.y-wy);if(d<bd){bd=d;best=t;bs=0}}
+  pickSeg=bs;return best;}
+
+/* ---- gestures ---- */
+const ptrs=new Map();let moved=false,pinch=null;
+const pos=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+const MEAS={id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,text:1};
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+/* --- ذره‌بین دقیق: نگه‌داشتن انگشت (یا گرفتن یک نقطه‌ی ثبت‌شده) → ذره‌بین؛ رها کردن → ثبت خودکار --- */
+function cancelHold(){if(holdT){clearTimeout(holdT);holdT=null}}
+function grabAt(px,py){
+  let best=null,bd=26;const chk=(p,k,i)=>{const [a,b]=w2s(p.x,p.y),d=Math.hypot(a-px,b-py);if(d<bd){bd=d;best={k,i}}};
+  if(tent)chk(tent,'tent');pts.forEach((p,i)=>chk(p,'pts',i));if(tool==='id')log.forEach((p,i)=>chk(p,'log',i));
+  return best;}
+function beginPrec(p,drag){
+  prec={x:p.x,y:p.y,sx:p.x,sy:p.y,moved:false,drag,snap:snapAt(p.x,p.y)};moved=true;hover=null;
+  if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}
+  renderPanel();req();}
+function commitPrec(){
+  const pr=prec;prec=null;
+  if(pr.drag&&!pr.moved){renderPanel();req();return}      // فقط لمس شد، جابه‌جا نشد
+  const sn=pr.snap,d=pr.drag;
+  if(d){if(d.k==='pts')pts[d.i]=sn;else if(d.k==='tent')tent=sn;else if(d.k==='log')log[d.i]=sn}
+  else if(tool==='id'||tool==='text'){tent=sn}
+  else{if(tool==='angle'&&pts.length>=3)pts=[];pts.push(sn);tent=null;autoDraw()}
+  renderPanel();req();}
+function startHold(p){
+  cancelHold();if(!DB||!MEAS[tool])return;
+  const gr=grabAt(p.x,p.y);
+  if(gr){beginPrec(p,gr);return}
+  holdT=setTimeout(()=>{holdT=null;if(ptrs.size===1&&!moved)beginPrec(p,null)},380);}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const p=pos(e);
+  ptrs.set(e.pointerId,{x:p.x,y:p.y,sx:p.x,sy:p.y,t:performance.now()});
+  if(ptrs.size===1){moved=false;pinch=null;startHold(p)}
+  if(ptrs.size===2){cancelHold();if(prec){prec=null;renderPanel()}moved=true;const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}}});
+cv.addEventListener('pointermove',e=>{
+  const p=pos(e),o=ptrs.get(e.pointerId);
+  if(!o){if(e.pointerType==='mouse'&&tool!=='pan'&&tool!=='prop'&&tool!=='del'&&DB){hover=snapAt(p.x,p.y);req()}return}
+  if(prec&&ptrs.size===1){
+    if(!prec.moved&&Math.hypot(p.x-prec.sx,p.y-prec.sy)>6)prec.moved=true;
+    prec.x=p.x;prec.y=p.y;prec.snap=snapAt(p.x,p.y);o.x=p.x;o.y=p.y;renderPanel();req();return}
+  if(holdT&&Math.hypot(p.x-o.sx,p.y-o.sy)>10)cancelHold();
+  if(ptrs.size===1){
+    if(!moved&&Math.hypot(p.x-o.sx,p.y-o.sy)>8)moved=true;
+    if(moved){view.cx-=(p.x-o.x)/view.s;view.cy+=(p.y-o.y)/view.s;req()}
+    o.x=p.x;o.y=p.y;}
+  else if(ptrs.size===2&&pinch){
+    o.x=p.x;o.y=p.y;const [a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,c={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    const wp=s2w(pinch.cx,pinch.cy);view.s=Math.max(1e-9,Math.min(1e9,view.s*d/pinch.d));
+    view.cx=wp[0]-(c.x-W/2)/view.s;view.cy=wp[1]+(c.y-H/2)/view.s;pinch={d,cx:c.x,cy:c.y};req()}});
+function up(e){const o=ptrs.get(e.pointerId);if(!o)return;const was=ptrs.size;ptrs.delete(e.pointerId);cancelHold();
+  if(prec){if(e.type==='pointerup'&&was===1)commitPrec();else{prec=null;renderPanel();req()}return}
+  if(was===1&&!moved&&performance.now()-o.t<700&&e.type==='pointerup')onTap(o.sx,o.sy);
+  if(ptrs.size<2)pinch=null;if(ptrs.size===1)moved=true}
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e),wp=s2w(p.x,p.y);
+  view.s=Math.max(1e-9,Math.min(1e9,view.s*Math.pow(1.0018,-e.deltaY)));
+  view.cx=wp[0]-(p.x-W/2)/view.s;view.cy=wp[1]+(p.y-H/2)/view.s;req()},{passive:false});
+function zoomBy(k){view.s=Math.max(1e-9,Math.min(1e9,view.s*k));req()}
+function zoomExtents(){
+  if(!DB)return;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300,any=false;
+  for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3]);any=true}
+  for(const t of DB.texts){if(!t.L.on||t.del)continue;x0=Math.min(x0,t.x);y0=Math.min(y0,t.y);x1=Math.max(x1,t.x);y1=Math.max(y1,t.y);any=true}
+  if(!any)return;const w=x1-x0,h=y1-y0;
+  view.s=(w<1e-9&&h<1e-9)?1:Math.min(W/Math.max(w,1e-9),H/Math.max(h,1e-9))*0.92;
+  view.cx=(x0+x1)/2;view.cy=(y0+y1)/2;req()}
+
+/* ---- tools ---- */
+const f=v=>Number(v).toFixed(S.dec);
+const dmsStr=a=>{let d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;if(s>=59.995){s=0;m++}if(m>=60){m=0;d++}return d+'° '+m+"' "+s.toFixed(1)+'"'};
+const gon=a=>(a*400/360).toFixed(4)+' gon';
+const snapName=t=>({e:'snap: نقطه انتها / رأس',m:'snap: نقطه وسط',c:'snap: مرکز',i:'snap: نقطه درج / متن',n:'snap: نقطه (POINT)'}[t]||'بدون snap (نقطه‌ی آزاد)');
+const row=(k,v,c='')=>`<div class="r ${c}"><span>${k}</span><b dir="ltr">${v}</b></div>`;
+const btns=a=>'<div class="btns">'+a.map(([act,l,dis,pri])=>`<button data-a="${act}" class="${pri?'pri':''}" ${dis?'disabled':''}>${l}</button>`).join('')+'</div>';
+function seg(a,b){const dx=b.x-a.x,dy=b.y-a.y;let az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;return {dx,dy,d:Math.hypot(dx,dy),az,dz:(b.z||0)-(a.z||0)}}
+function polyArea(P){let s=0;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];s+=a.x*b.y-b.x*a.y}return Math.abs(s)/2}
+function entInfo(p){const P=p.pts,n=P.length;let len=p.info.len;
+  if(len===undefined){len=0;const m=p.closed?n:n-2;for(let i=0;i<m;i+=2){const j=(i+2)%n;len+=Math.hypot(P[j]-P[i],P[j+1]-P[i+1])}}
+  let area=p.info.area;if(area===undefined&&p.closed&&n>=6){const q=[];for(let i=0;i<n;i+=2)q.push({x:P[i],y:P[i+1]});area=polyArea(q)}
+  return {len,area}}
+function renderPanel(){
+  const P=$('panel');if(tool==='pan'||!DB){P.style.display='none';return}
+  P.style.display='block';const {pts,tent,log}=curState();const live=tent?pts.concat([tent]):pts.slice();let h='';
+  const u=UNITS[DB.units]||'';
+  if(tool==='id'){
+    if(tent){h+=row('X',f(tent.x))+row('Y',f(tent.y))+row('Z',f(tent.z))+`<div class="sn">${snapName(tent.t)}</div>`}
+    else h+='<div class="hint">روی نقشه ضربه بزنید تا مختصات نقطه نمایش داده شود (با snap به نقاط مهم)</div>';
+    if(log.length)h+=`<div class="sn">لیست ذخیره‌شده: ${log.length} نقطه</div>`;
+    h+=btns([['logadd','＋ ثبت در لیست',!tent,1],['copy','کپی',!tent&&!log.length],['clear','پاک‌کردن لیست',!log.length]]);}
+  else if(tool==='dist'){
+    if(live.length<2)h+=`<div class="hint">نقطه‌ی ${live.length+1} را انتخاب کنید، سپس «ثبت نقطه» را بزنید</div>`;
+    else{const a=live[live.length-2],b=live[live.length-1],s=seg(a,b);let tot=0;for(let i=1;i<live.length;i++)tot+=seg(live[i-1],live[i]).d;
+      h+=row('فاصله‌ی افقی '+(u?'('+u+')':''),f(s.d),'big')+row('ΔX',f(s.dx))+row('ΔY',f(s.dy))+row('آزیموت',dmsStr(s.az))+row('آزیموت (گون)',gon(s.az));
+      if(Math.abs(s.dz)>1e-9)h+=row('ΔZ',f(s.dz))+row('فاصله‌ی اریب (سه‌بعدی)',f(Math.hypot(s.d,s.dz)))+row('شیب',(s.dz/s.d*100).toFixed(2)+' %');
+      if(live.length>2)h+=row('طول کل مسیر',f(tot),'big');}
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1],['undo','↶ حذف آخرین',!pts.length],['copy','کپی',live.length<2],['clear','شروع مجدد',!pts.length&&!tent]]);}
+  else if(tool==='area'){
+    if(live.length<3)h+=`<div class="hint">حداقل ۳ نقطه برای مساحت لازم است (فعلاً ${live.length})</div>`;
+    else{let per=0;for(let i=0;i<live.length;i++)per+=seg(live[i],live[(i+1)%live.length]).d;
+      h+=row('مساحت '+(u?'('+u+'²)':''),f(polyArea(live)),'big')+row('محیط',f(per))+row('تعداد نقاط',live.length);}
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1],['undo','↶ حذف آخرین',!pts.length],['copy','کپی',live.length<3],['clear','شروع مجدد',!pts.length&&!tent]]);}
+  else if(tool==='angle'){
+    if(live.length<3)h+=`<div class="hint">نقطه‌ی ۱، سپس رأس زاویه (نقطه‌ی ۲)، سپس نقطه‌ی ۳ (الان: ${live.length})</div>`;
+    else{const s1=seg(live[1],live[0]),s2=seg(live[1],live[2]);let cw=s2.az-s1.az;if(cw<0)cw+=360;const sm=cw>180?360-cw:cw;
+      h+=row('زاویه‌ی ساعتگرد (۱→۳)',dmsStr(cw),'big')+row('(گون)',gon(cw))+row('زاویه‌ی کوچک‌تر',dmsStr(sm))+row('(اعشاری)',sm.toFixed(5)+'°');}
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1],['undo','↶ حذف آخرین',!pts.length],['clear','شروع مجدد',!pts.length&&!tent]]);}
+  else if(tool==='prop'){
+    const C=(sel&&sel.s===undefined)?arcOf(sel):null;
+    if(!sel)h+='<div class="hint">روی یک خط، پلی‌لاین، دایره، کمان یا متن ضربه بزنید</div>';
+    else if(sel.s!==undefined){h+=row('نوع','متن')+row('لایه',esc(sel.L.name))+row('متن',esc(sel.s.split('\n').join(' ⏎ ')))+row('X',f(sel.x))+row('Y',f(sel.y))+row('ارتفاع متن',f(sel.h))}
+    else{const i=entInfo(sel);h+=row('نوع',sel.info.type)+row('لایه',esc(sel.L.name));
+      if(C)h+=row('مرکز X',f(C.cx))+row('مرکز Y',f(C.cy))+(C.z!==undefined?row('مرکز Z',f(C.z)):'')+row('شعاع',f(C.r),'big')+row('طول کمان',f(C.len))+row('زاویه‌ی کمان',dmsStr(Math.abs(C.sw)*180/Math.PI))+(C.chord?row('وتر',f(C.chord)):'');
+      h+=row('طول '+(sel.info.type==='POINT'?'':'(محیط اگر بسته)'),f(i.len),'big');
+      if(i.area!==undefined)h+=row('مساحت',f(i.area),'big');
+      if(sel.info.z&&sel.info.z.length===2&&Math.abs(sel.info.z[1]-sel.info.z[0])>1e-9)h+=row('طول اریب (سه‌بعدی)',f(Math.hypot(i.len,sel.info.z[1]-sel.info.z[0])));
+      if(sel.info.type==='POINT')h+=row('X',f(sel.pts[0]))+row('Y',f(sel.pts[1]))+row('Z',f(sel.info.z[0]));}
+    h+=btns([['copy','کپی',!sel||sel.s!==undefined],['ctr','مرکز در مختصات',!C],['clear','لغو انتخاب',!sel]]);}
+  else if(tool==='line'||tool==='pl'||tool==='arc'){
+    const nm={line:'خط',pl:'پلی‌لاین',arc:'کمان'}[tool];
+    if(tool==='arc'){const need=['نقطه‌ی شروع','یک نقطه‌ی میانی روی کمان','نقطه‌ی پایان'];
+      if(live.length<3)h+=`<div class="hint">${need[live.length]} را مشخص کنید، سپس «ثبت نقطه» را بزنید</div>`;
+      else{const A=arc3(live[0],live[1],live[2]);if(A)h+=row('مرکز X',f(A.cx))+row('مرکز Y',f(A.cy))+row('شعاع',f(A.r),'big')+row('طول کمان',f(A.len))+row('زاویه‌ی کمان',dmsStr(Math.abs(A.sw)*180/Math.PI));else h+='<div class="hint">سه نقطه روی یک راستا هستند</div>'}}
+    else{
+      if(live.length<1)h+=`<div class="hint">نقطه‌ی اول ${nm} را مشخص کنید</div>`;
+      else if(live.length<2)h+='<div class="hint">نقطه‌ی بعدی را مشخص کنید</div>';
+      else{let tot=0;for(let i=1;i<live.length;i++)tot+=seg(live[i-1],live[i]).d;const s=seg(live[live.length-2],live[live.length-1]);
+        h+=row('طول آخرین پاره',f(s.d),'big')+row('آزیموت',dmsStr(s.az));if(live.length>2)h+=row('طول کل',f(tot))}}
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1]].concat(tool==='pl'?[['finish','پایان',pts.length<2],['finishc','بستن',pts.length<3]]:[]).concat([['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]]));}
+  else if(tool==='text'){
+    const th=(S.th>0)?S.th:autoH();
+    if(!tent)h+='<div class="hint">محل متن را روی نقشه مشخص کنید (ضربه یا نگه‌داشتن)</div>';
+    else h+=row('X',f(tent.x))+row('Y',f(tent.y))+row('Z',f(tent.z));
+    h+=`<div class="fl"><label for="tH">ارتفاع متن</label><input type="number" id="tH" inputmode="decimal" step="any" value="${th}"></div>`;
+    h+=`<div class="fl"><input type="text" id="tT" placeholder="متن دلخواه" value="${esc(S.tt||'')}"></div>`;
+    h+=btns([['txyz','درج X Y Z',!tent,1],['txy','درج X Y',!tent],['ttxt','درج متن دلخواه',!tent],['clear','لغو',!tent]]);}
+  else if(tool==='del'){
+    if(!sel)h+='<div class="hint">روی یک شیء ضربه بزنید تا انتخاب شود، بعد «حذف» را بزنید. با دکمه‌ی ↶ بالای صفحه برمی‌گردد.</div>';
+    else h+=row('انتخاب‌شده',sel.s!==undefined?'متن':sel.info.type)+row('لایه',esc(sel.L.name));
+    h+=btns([['delsel','🗑 حذف',!sel,1],['clear','لغو انتخاب',!sel]]);}
+  P.innerHTML=h;}
+function copyText(){
+  const live=tent?pts.concat([tent]):pts.slice();let t='';
+  if(tool==='id'){const L=log.length?log:(tent?[tent]:[]);t=L.map((p,i)=>`${i+1}\t${f(p.x)}\t${f(p.y)}\t${f(p.z)}`).join('\n')}
+  else if(tool==='dist'&&live.length>=2){const s=seg(live[live.length-2],live[live.length-1]);t=`dist\t${f(s.d)}\tdx\t${f(s.dx)}\tdy\t${f(s.dy)}\taz\t${s.az.toFixed(5)}`}
+  else if(tool==='area'&&live.length>=3)t='area\t'+f(polyArea(live));
+  else if(tool==='prop'&&sel&&sel.s===undefined){const i=entInfo(sel);t=`${sel.info.type}\t${sel.L.name}\tlen\t${f(i.len)}`+(i.area!==undefined?`\tarea\t${f(i.area)}`:'')}
+  if(!t)return;
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).catch(fb);else fb();
+  flash('کپی شد');}
+function flash(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#33c27f;color:#04210f;padding:6px 14px;border-radius:20px;font-weight:700;z-index:20';document.body.appendChild(d);setTimeout(()=>d.remove(),1100)}
+function onTap(x,y){
+  if(!DB||tool==='pan')return;
+  if(tool==='prop'||tool==='del'){sel=pickEntity(x,y);selSeg=pickSeg}else{tent=snapAt(x,y);hover=null}
+  renderPanel();req()}
+$('panel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
+  if(a==='confirm'&&tent){if(tool==='angle'&&pts.length>=3)pts=[];pts.push(tent);tent=null;autoDraw()}
+  else if(a==='logadd'&&tent){log.push(tent);tent=null}
+  else if(a==='undo'){pts.pop();tent=null}
+  else if(a==='clear'){pts=[];tent=null;sel=null;if(tool==='id')log=[]}
+  else if(a==='finish'||a==='finishc'){finishPoly(a==='finishc')}
+  else if(a==='delsel'&&sel){doDelete(sel);sel=null}
+  else if(a==='txyz'&&tent){addTextAt(tent,'X='+f(tent.x)+'\nY='+f(tent.y)+'\nZ='+f(tent.z));tent=null}
+  else if(a==='txy'&&tent){addTextAt(tent,'X='+f(tent.x)+'\nY='+f(tent.y));tent=null}
+  else if(a==='ttxt'&&tent){const v=(($('tT')&&$('tT').value)||'').trim();if(v){S.tt='';addTextAt(tent,v);tent=null}else flash('متن را بنویسید')}
+  else if(a==='ctr'&&sel){showCenter();return}
+  else if(a==='copy')copyText();
+  renderPanel();req()});
+document.querySelectorAll('#tools button').forEach(b=>b.addEventListener('click',()=>{
+  tool=b.dataset.t;pts=[];tent=null;sel=null;hover=null;
+  document.querySelectorAll('#tools button').forEach(x=>x.classList.toggle('on',x===b));renderPanel();req()}));
+$('bUndo').onclick=undo;$('panel').addEventListener('input',e=>{if(e.target.id==='tH')S.th=parseFloat(e.target.value)||0;else if(e.target.id==='tT')S.tt=e.target.value});
+$('bFit').onclick=zoomExtents;$('bIn').onclick=()=>zoomBy(1.6);$('bOut').onclick=()=>zoomBy(1/1.6);
+
+/* ---- ویرایش: ترسیم، متن، حذف، برگرداندن، ذخیره ---- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nice=v=>{if(!(v>0))return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return +((m<1.5?1:m<3.5?2:m<7.5?5:10)*e).toPrecision(2)};
+const autoH=()=>nice(16/view.s);
+function arc3(a,b,c){
+  const ax=a.x,ay=a.y,bx=b.x,by=b.y,cx=c.x,cy=c.y,d=2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by));
+  if(Math.abs(d)<1e-12)return null;
+  const A=ax*ax+ay*ay,B=bx*bx+by*by,C=cx*cx+cy*cy;
+  const ux=(A*(by-cy)+B*(cy-ay)+C*(ay-by))/d,uy=(A*(cx-bx)+B*(ax-cx)+C*(bx-ax))/d;
+  const r=Math.hypot(ax-ux,ay-uy),a0=Math.atan2(ay-uy,ax-ux),am=Math.atan2(by-uy,bx-ux),a1=Math.atan2(cy-uy,cx-ux),T=2*Math.PI;
+  let s1=(am-a0)%T;if(s1<0)s1+=T;let s2=(a1-a0)%T;if(s2<0)s2+=T;
+  const sw=s1<=s2?s2:s2-T;
+  return {cx:ux,cy:uy,r,a0,sw,len:r*Math.abs(sw)};}
+function arcOf(p){
+  if(!p||p.s!==undefined)return null;const I=p.info;
+  if(I.type==='CIRCLE'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:2*Math.PI*I.r,sw:2*Math.PI,chord:0};
+  if(I.type==='ARC'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:I.len,sw:I.sw,chord:2*I.r*Math.sin(Math.abs(I.sw)/2)};
+  if(I.arcs){const P=p.pts,np=P.length/2,j=selSeg;
+    for(const [k0,k1] of I.arcs){const e=k1===0?np:k1;
+      if(j>=k0&&j<e){const m=Math.floor((k0+e)/2),kk=k1%np,a={x:P[2*k0],y:P[2*k0+1]},b={x:P[2*m],y:P[2*m+1]},c={x:P[2*kk],y:P[2*kk+1]},A=arc3(a,b,c);
+        if(A)return {cx:A.cx,cy:A.cy,r:A.r,len:A.len,sw:A.sw,chord:Math.hypot(c.x-a.x,c.y-a.y)}}}}
+  return null}
+function updUndo(){const b=$('bUndo');if(b)b.disabled=!hist.length}
+function pushHist(kind,objs){hist.push({kind,objs});if(hist.length>300)hist.shift();updUndo()}
+function undo(){const h=hist.pop();if(!h)return;for(const o of h.objs)o.del=(h.kind==='add');updUndo();sel=null;renderPanel();req();flash('برگردانده شد')}
+function doDelete(o){o.del=true;pushHist('del',[o]);flash('حذف شد')}
+function addUserPrim(flat,closed,type,info,snaps){
+  const L=DB.mk,col=0xffa500;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
+  for(let i=0;i<flat.length;i+=2){x0=Math.min(x0,flat[i]);x1=Math.max(x1,flat[i]);y0=Math.min(y0,flat[i+1]);y1=Math.max(y1,flat[i+1])}
+  info.type=type;info.mine=true;const pr={pts:flat,closed,L,col,bb:[x0,y0,x1,y1],info};
+  DB.prims.push(pr);let bk=DB.buckets.find(b=>b.col===col);if(!bk){bk={col,list:[]};DB.buckets.push(bk)}bk.list.push(pr);L.count++;
+  for(const q of snaps){DB.sx.push(q[0]);DB.sy.push(q[1]);DB.sz.push(q[2]);DB.st.push(q[3]);DB.sl.push(L);DB.so.push(pr)}
+  return pr}
+function addUserText(x,y,z,h,s){
+  const L=DB.mk,tx={x,y,h,rot:0,s,col:0xffa500,L,ah:'left',av:'alphabetic',mine:true,z:z||0};
+  DB.texts.push(tx);L.count++;DB.sx.push(x);DB.sy.push(y);DB.sz.push(z||0);DB.st.push('i');DB.sl.push(L);DB.so.push(tx);return tx}
+function autoDraw(){
+  if(tool==='line'&&pts.length>=2){
+    const a=pts[0],b=pts[1],za=a.z||0,zb=b.z||0;
+    const pr=addUserPrim([a.x,a.y,b.x,b.y],false,'LINE',{z:[za,zb]},[[a.x,a.y,za,'e'],[b.x,b.y,zb,'e'],[(a.x+b.x)/2,(a.y+b.y)/2,(za+zb)/2,'m']]);
+    pushHist('add',[pr]);pts=[];flash('خط رسم شد')}
+  else if(tool==='arc'&&pts.length>=3){
+    const A=arc3(pts[0],pts[1],pts[2]);
+    if(!A){flash('سه نقطه روی یک راستا هستند');pts.pop();return}
+    const n=Math.max(8,Math.ceil(Math.abs(A.sw)/(Math.PI/90))),flat=[],z=pts[0].z||0;
+    for(let q=0;q<=n;q++){const t=A.a0+A.sw*q/n;flat.push(A.cx+A.r*Math.cos(t),A.cy+A.r*Math.sin(t))}
+    const mi=Math.floor(n/2)*2,dd=x=>((x*180/Math.PI)%360+360)%360;
+    const s0=A.sw>=0?A.a0:A.a0+A.sw,s1=A.sw>=0?A.a0+A.sw:A.a0;
+    const pr=addUserPrim(flat,false,'ARC',{r:A.r,sw:A.sw,len:A.len,c:[A.cx,A.cy,z],ex:{t:'A',c:[A.cx,A.cy,z],r:A.r,a0:dd(s0),a1:dd(s1)}},
+      [[A.cx,A.cy,z,'c'],[flat[0],flat[1],z,'e'],[flat[flat.length-2],flat[flat.length-1],z,'e'],[flat[mi],flat[mi+1],z,'m']]);
+    pushHist('add',[pr]);pts=[];flash('کمان رسم شد')}}
+function finishPoly(closed){
+  if(tool!=='pl'||pts.length<2||(closed&&pts.length<3))return;
+  const flat=[],sn=[];for(const p of pts){flat.push(p.x,p.y);sn.push([p.x,p.y,p.z||0,'e'])}
+  const pr=addUserPrim(flat,!!closed,'LWPOLYLINE',{zs:pts.map(p=>p.z||0)},sn);
+  pushHist('add',[pr]);pts=[];tent=null;flash('پلی‌لاین ثبت شد')}
+function addTextAt(p,str){
+  const h=(S.th>0)?S.th:autoH(),z=p.z||0;
+  const pm=addUserPrim([p.x,p.y],false,'POINT',{z:[z]},[[p.x,p.y,z,'n']]);
+  const tx=addUserText(p.x+h*0.3,p.y+h*0.3,z,h,str);pushHist('add',[pm,tx]);flash('درج شد')}
+function showCenter(){const C=arcOf(sel);if(!C)return;
+  document.querySelector('#tools button[data-t="id"]').click();tent={x:C.cx,y:C.cy,z:C.z||0,t:'c'};renderPanel();req()}
+const ACI_CACHE=new Map();
+function acin(rgb){rgb&=0xffffff;let v=ACI_CACHE.get(rgb);if(v)return v;
+  const r=(rgb>>16)&255,gg=(rgb>>8)&255,b=rgb&255;let best=7,bd=1e18;
+  for(let n=1;n<=255;n++){const c=aciRGB(n),dr=((c>>16)&255)-r,dg=((c>>8)&255)-gg,db=(c&255)-b,d=dr*dr+dg*dg+db*db;if(d<bd){bd=d;best=n}}
+  ACI_CACHE.set(rgb,best);return best}
+function buildDXF(only){
+  const E=[],lay=new Map([['0',7]]);
+  const w=(c,v)=>{E.push(String(c),String(v))};
+  const num=v=>(+v||0).toFixed(6);
+  const enc=s=>String(s).replace(/[^\x20-\x7e]/g,ch=>'\\U+'+ch.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0'));
+  const lname=L=>enc((String(L.name).replace(/[<>\/\\":;?*|=`,]/g,'_')||'0')).slice(0,250);
+  const useL=L=>{const n=lname(L);if(!lay.has(n))lay.set(n,acin(L.color));return n};
+  for(const p of DB.prims){
+    if(p.del||(only&&!p.info.mine))continue;
+    const I=p.info,P=p.pts,ln=useL(p.L),col=acin(p.col),X=I.ex;
+    const hd=t=>{w(0,t);w(8,ln);w(62,col)};
+    if(I.type==='POINT'){hd('POINT');w(10,num(P[0]));w(20,num(P[1]));w(30,num(I.z&&I.z[0]))}
+    else if(I.type==='LINE'){hd('LINE');w(10,num(P[0]));w(20,num(P[1]));w(30,num(I.z&&I.z[0]));w(11,num(P[2]));w(21,num(P[3]));w(31,num(I.z&&I.z[1]))}
+    else if(X&&X.t==='C'){hd('CIRCLE');w(10,num(X.c[0]));w(20,num(X.c[1]));w(30,num(X.c[2]));w(40,num(X.r))}
+    else if(X&&X.t==='A'){hd('ARC');w(10,num(X.c[0]));w(20,num(X.c[1]));w(30,num(X.c[2]));w(40,num(X.r));w(50,num(X.a0));w(51,num(X.a1))}
+    else if(P.length>=4){hd('POLYLINE');w(66,1);w(10,0);w(20,0);w(30,0);w(70,p.closed?1:0);
+      for(let i=0;i<P.length;i+=2){w(0,'VERTEX');w(8,ln);w(10,num(P[i]));w(20,num(P[i+1]));w(30,num(I.zs&&I.zs[i/2]))}
+      w(0,'SEQEND');w(8,ln)}}
+  const AH={left:0,center:1,right:2},AV={alphabetic:0,bottom:1,middle:2,top:3};
+  for(const t of DB.texts){
+    if(t.del||(only&&!t.mine))continue;
+    const ln=useL(t.L),col=acin(t.col),rot=t.rot*180/Math.PI;
+    String(t.s).split('\n').forEach((s,i)=>{if(!s.trim())return;
+      const dy=i*t.h*1.35,x=t.x+Math.sin(t.rot)*dy,y=t.y-Math.cos(t.rot)*dy;
+      w(0,'TEXT');w(8,ln);w(62,col);w(10,num(x));w(20,num(y));w(30,num(t.z));w(40,num(t.h));w(1,enc(s));w(50,num(rot));
+      const a=AH[t.ah]||0,v=AV[t.av]||0;if(a||v){w(72,a);w(73,v);w(11,num(x));w(21,num(y));w(31,num(t.z))}})}
+  const T=[],tw=(c,v)=>{T.push(String(c),String(v))};
+  tw(0,'SECTION');tw(2,'HEADER');tw(9,'$ACADVER');tw(1,'AC1009');tw(0,'ENDSEC');
+  tw(0,'SECTION');tw(2,'TABLES');
+  tw(0,'TABLE');tw(2,'LTYPE');tw(70,1);tw(0,'LTYPE');tw(2,'CONTINUOUS');tw(70,0);tw(3,'Solid line');tw(72,65);tw(73,0);tw(40,0);tw(0,'ENDTAB');
+  tw(0,'TABLE');tw(2,'LAYER');tw(70,lay.size);
+  for(const [n,c] of lay){tw(0,'LAYER');tw(2,n);tw(70,0);tw(62,c);tw(6,'CONTINUOUS')}
+  tw(0,'ENDTAB');tw(0,'ENDSEC');tw(0,'SECTION');tw(2,'ENTITIES');
+  return T.concat(E,['0','ENDSEC','0','EOF']).join('\n')+'\n'}
+async function saveText(name,text){
+  try{const file=new File([text],name,{type:'application/octet-stream'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}
+  catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'application/octet-stream'}));a.download=name;
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+function reportHTML(){
+  if(!DB)return '<div class="ver">هنوز فایلی باز نشده است.</div>';
+  const c=Object.entries(DB.counts).map(([k,v])=>k+'×'+v).join('، '),sk=Object.entries(DB.skipped).map(([k,v])=>k+'×'+v).join('، ');
+  return `<div class="ver" dir="ltr" style="text-align:left">${esc(c||'—')}</div>`+(sk?`<div class="ver">نمایش داده نشد: <span dir="ltr">${esc(sk)}</span></div>`:'')}
+
+/* ---- sheets ---- */
+function openSheet(h){$('sheetBox').innerHTML=h;$('sheet').style.display='flex'}
+$('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('sheet').style.display='none'});
+function msg(title,body){openSheet(`<h3>${title}</h3><div style="line-height:2">${body}</div><div class="btns"><button class="pri" onclick="document.getElementById('sheet').style.display='none'">باشه</button></div>`)}
+$('bLayers').onclick=()=>{
+  if(!DB)return msg('لایه‌ها','ابتدا یک فایل باز کنید.');
+  let h='<h3>لایه‌ها</h3><div class="btns"><button id="lAll">همه</button><button id="lNone">هیچ‌کدام</button></div>';
+  DB.layers.forEach((L,i)=>{h+=`<label class="lr"><input type="checkbox" data-i="${i}" ${L.on?'checked':''}><span class="sw" style="background:${dispCol(L.color)}"></span><span class="nm">${L.name.replace(/</g,'&lt;')}</span><span class="ct">${L.count}</span></label>`});
+  openSheet(h);
+  const sync=()=>{document.querySelectorAll('#sheetBox input[data-i]').forEach(c=>{DB.layers[c.dataset.i].on=c.checked});req()};
+  $('sheetBox').onchange=sync;
+  $('lAll').onclick=()=>{DB.layers.forEach(L=>L.on=true);document.querySelectorAll('#sheetBox input[data-i]').forEach(c=>c.checked=true);req()};
+  $('lNone').onclick=()=>{DB.layers.forEach(L=>L.on=false);document.querySelectorAll('#sheetBox input[data-i]').forEach(c=>c.checked=false);req()};};
+$('bSet').onclick=()=>{
+  openSheet(`<h3>تنظیمات</h3>
+  <div class="lr"><span class="nm" style="text-align:right;direction:rtl">تعداد رقم اعشار</span><select id="sDec">${[0,1,2,3,4,5,6].map(n=>`<option ${n===S.dec?'selected':''}>${n}</option>`).join('')}</select></div>
+  <label class="lr"><input type="checkbox" id="sSnap" ${S.snap?'checked':''}><span class="nm" style="direction:rtl;text-align:right">فعال بودن Snap</span></label>
+  <label class="lr"><input type="checkbox" id="sE" ${S.snapE?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به انتها / رأس / نقطه‌ی درج</span></label>
+  <label class="lr"><input type="checkbox" id="sM" ${S.snapM?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به وسط</span></label>
+  <label class="lr"><input type="checkbox" id="sC" ${S.snapC?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به مرکز دایره/کمان</span></label>
+  <label class="lr"><input type="checkbox" id="sD" ${S.dark?'checked':''}><span class="nm" style="direction:rtl;text-align:right">پس‌زمینه‌ی تیره</span></label>
+  <div class="btns" style="margin-top:12px"><button id="xMine">💾 ذخیره‌ی ترسیم‌ها و متن‌های من</button><button id="xAll">💾 ذخیره‌ی کل نقشه (ساده‌شده)</button></div>
+  <div class="sn">خروجی، فایل DXF متنی است و در اتوکد باز می‌شود. اگر گوشی پنجره‌ی اشتراک‌گذاری باز کرد، «ذخیره در فایل‌ها» را بزنید.</div>
+  <h3 style="margin-top:14px">گزارش فایل</h3>${reportHTML()}
+  <div class="ver">نسخه‌ی ${APP_VER}<br>تازه‌ها: ترسیم خط، پلی‌لاین و کمان؛ درج مختصات و متن؛ پاک کردن و برگرداندن؛ مرکز و شعاع کمان؛ هاشور؛ ذخیره‌ی DXF</div>`);
+  const b=$('sheetBox');b.onchange=()=>{S.dec=+$('sDec').value;S.snap=$('sSnap').checked;S.snapE=$('sE').checked;S.snapM=$('sM').checked;S.snapC=$('sC').checked;S.dark=$('sD').checked;renderPanel();req()};
+  const ex=only=>{if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');const base=(fileName||'map').replace(/\.[^.]+$/,'');saveText(base+(only?'-markup':'-edit')+'.dxf',buildDXF(only))};
+  if($('xMine'))$('xMine').onclick=()=>ex(true);
+  if($('xAll'))$('xAll').onclick=()=>ex(false);
+};
+
+/* ---- file ---- */
+function setDB(d,name){DB=d;fileName=name;tool='pan';pts=[];tent=null;log=[];sel=null;hover=null;hist=[];updUndo();
+  d.mk=d.layers.find(l=>l.name==='MARKUP')||{name:'MARKUP',color:0xffa500,on:true,count:0};if(!d.layers.includes(d.mk))d.layers.push(d.mk);
+  document.querySelectorAll('#tools button').forEach(x=>x.classList.toggle('on',x.dataset.t==='pan'));
+  $('fname').textContent=name;$('empty').style.display='none';renderPanel();resize();zoomExtents();
+  const sk=Object.entries(d.skipped);
+  if(!d.prims.length&&!d.texts.length)msg('خالی','موجودیت قابل نمایشی پیدا نشد.'+(sk.length?'<br>نوع‌های پشتیبانی‌نشده: <span dir="ltr">'+sk.map(([k,v])=>k+'×'+v).join(', ')+'</span>':''));
+  else if(sk.length)flash('بعضی موجودیت‌ها نمایش داده نشد: '+sk.map(([k])=>k).join(', '))}
+function openBuffer(buf,name){
+  const u8=new Uint8Array(buf),head=String.fromCharCode.apply(null,u8.subarray(0,22));
+  if(head.startsWith('AutoCAD Binary DXF'))return msg('DXF باینری','این DXF از نوع باینری است. هنگام ذخیره/تبدیل، گزینه‌ی <b>ASCII DXF</b> را انتخاب کنید.');
+  if(/^AC10\d\d/.test(head))return msg('فایل DWG است','مرورگر نمی‌تواند DWG را مستقیم باز کند. فایل را با <b>ODA File Converter</b> (رایگان، روی کامپیوتر) یا هر مبدل دیگر به <b>ASCII DXF</b> (ترجیحاً نسخه‌ی R2000 یا 2004) تبدیل کنید و همان را اینجا باز کنید.');
+  let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(u8)}catch(_){try{text=new TextDecoder('windows-1256').decode(u8)}catch(__){text=new TextDecoder('utf-8').decode(u8)}}
+  if(!/^\s*0\s*\n\s*SECTION/m.test(text.slice(0,2000)))return msg('فرمت نامعتبر','این فایل شبیه DXF متنی نیست.');
+  setDB(parseDXF(text),name);}
+function loadFile(file){
+  flash('در حال بارگذاری…');const fr=new FileReader();
+  fr.onload=()=>setTimeout(()=>{try{openBuffer(fr.result,file.name)}catch(err){msg('خطا در خواندن فایل',String(err&&err.message||err))}},30);
+  fr.onerror=()=>msg('خطا','فایل خوانده نشد.');fr.readAsArrayBuffer(file)}
+$('file').addEventListener('change',e=>{const fl=e.target.files[0];if(fl)loadFile(fl);e.target.value=''});
+$('bOpen').onclick=$('bOpen2').onclick=()=>$('file').click();
+$('bDemo').onclick=()=>{
+  const P=[[0,'SECTION'],[2,'ENTITIES'],[0,'LINE'],[8,'محور'],[62,1],[10,0],[20,0],[11,100],[21,0],
+  [0,'LWPOLYLINE'],[8,'ساختمان'],[62,3],[90,4],[70,1],[10,10],[20,10],[10,60],[20,10],[10,60],[20,50],[10,10],[20,50],
+  [0,'CIRCLE'],[8,'درخت'],[62,5],[10,80],[20,30],[40,15],
+  [0,'ARC'],[8,'محور'],[62,2],[10,30],[20,70],[40,20],[50,0],[51,180],
+  [0,'POINT'],[8,'نقاط'],[62,6],[10,95],[20,60],[30,12.5],
+  [0,'TEXT'],[8,'متن'],[62,7],[10,12],[20,54],[40,4],[1,'Building A'],
+  [0,'ENDSEC'],[0,'EOF']];
+  setDB(parseDXF(P.map(p=>p.join('\n')).join('\n')),'نمونه.dxf')};
+resize();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}})}
+</script>
+</body>
+</html>
