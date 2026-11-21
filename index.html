@@ -57,6 +57,25 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
 .fl{display:flex;gap:8px;align-items:center;margin-top:8px}.fl label{color:var(--mut);white-space:nowrap}
 #brand{width:96px;height:96px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
 .ver{color:var(--mut);font-size:12px;line-height:1.9;padding-top:8px}
+#chips{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
+#chips button{padding:5px 11px;font-size:12px;border-radius:16px;background:rgba(30,35,43,.92)}
+#chips button.on{background:var(--ok);color:#04210f;border-color:var(--ok);font-weight:700}
+#sub{display:none;overflow-x:auto;background:#232b36;border-top:1px solid var(--line);scrollbar-width:none}
+#sub::-webkit-scrollbar{display:none}
+#sub button{flex:1 0 auto;min-width:78px;border:0;border-radius:0;background:transparent;padding:9px 8px;font-size:12.5px;display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
+#sub button i{font-style:normal;font-size:19px;line-height:1.1}
+#sub button.on{color:var(--acc);background:#2c3644}
+#tools button.open{background:#232b36}
+#tools sup{font-size:9px;margin-right:2px;vertical-align:top}
+@font-face{font-family:'F_naz';src:url(fonts/naz.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_nazb';src:url(fonts/nazb.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_titr';src:url(fonts/titr.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_lotus';src:url(fonts/lotus.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_zar';src:url(fonts/zar.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_yagut';src:url(fonts/yagut.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_mitra';src:url(fonts/mitra.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+@font-face{font-family:'F_traffic';src:url(fonts/traffic.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
+
 </style>
 </head>
 <body>
@@ -77,6 +96,7 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
       <button id="bIn">＋</button>
       <button id="bOut">−</button>
     </div>
+    <div id="chips"><button data-c="snap">اسنپ</button><button data-c="ortho">عمود</button><button data-c="lw">ضخامت خط</button></div>
     <div id="empty">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="brand">
 <defs>
@@ -115,20 +135,8 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
     </div>
   </div>
   <div id="panel"></div>
-  <div id="tools">
-    <button data-t="pan" class="on"><i>✋</i>حرکت</button>
-    <button data-t="id"><i>📍</i>مختصات</button>
-    <button data-t="dist"><i>📏</i>فاصله</button>
-    <button data-t="area"><i>⬚</i>مساحت</button>
-    <button data-t="angle"><i>∠</i>زاویه</button>
-    <button data-t="prop"><i>ℹ️</i>ویژگی</button>
-    <span class="sep"></span>
-    <button data-t="line"><i>╱</i>خط</button>
-    <button data-t="pl"><i>⌇</i>پلی‌لاین</button>
-    <button data-t="arc"><i>◠</i>کمان</button>
-    <button data-t="text"><i>Aa</i>متن</button>
-    <button data-t="del"><i>🗑</i>پاک</button>
-  </div>
+  <div id="sub"></div>
+  <div id="tools"></div>
 </div>
 <div id="sheet"><div class="box" id="sheetBox"></div></div>
 <input type="file" id="file" style="display:none">
@@ -195,7 +203,7 @@ function parseDXF(text){
   for(const it of items.TABLES){if(it.t!=='LAYER')continue;
     const L=getLayer((gs(it,2)||'0').trim()),aci=gf(it,62,7),fl=gf(it,70,0),tc=gs(it,420);
     L.color=tc!==undefined?(parseInt(tc)&0xffffff):aciRGB(Math.abs(aci));
-    L.on=aci>=0&&!(fl&1);}
+    L.on=aci>=0&&!(fl&1);L.lw=gf(it,370,-3);}
   const blocks={};let cb=null;
   for(const it of items.BLOCKS){
     if(it.t==='BLOCK'){cb={name:(gs(it,2)||'').trim(),bx:gf(it,10,0),by:gf(it,20,0),items:[]};blocks[cb.name]=cb}
@@ -206,7 +214,7 @@ function parseDXF(text){
     let ln=gs(it,8);ln=ln===undefined?'0':ln.trim();if(ln==='0'&&ctx.layer)ln=ctx.layer;
     const L=getLayer(ln),tc=gs(it,420),aci=gf(it,62,256);let col;
     if(tc!==undefined)col=parseInt(tc)&0xffffff;else if(aci===256)col=L.color;else if(aci===0)col=ctx.color;else col=aciRGB(Math.abs(aci));
-    return {L,col};}
+    const le=gf(it,370,-1);return {L,col,lw:le>=0?le:(L.lw>=0?L.lw:25)};}
   function addSnap(sty,x,y,z,t,own){sx.push(x);sy.push(y);sz.push(z);st.push(t);sl.push(sty.L);so.push(own||null)}
   function EXI(ctx,M,t,c,z,r,a0,a1){return (M===ctx.M&&ctx.M[0]===1&&ctx.M[1]===0&&ctx.M[2]===0&&ctx.M[3]===1)?{t,c:[c[0],c[1],z],r,a0,a1}:undefined}
   function addPoly(flat,closed,sty,type,snaps,extra){
@@ -214,7 +222,7 @@ function parseDXF(text){
     for(let i=0;i<flat.length;i+=2){const x=flat[i],y=flat[i+1];if(!(isFinite(x)&&isFinite(y)))return;
       if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
     const info=extra||{};info.type=type;
-    const pr={pts:flat,closed,L:sty.L,col:sty.col,bb:[x0,y0,x1,y1],info};prims.push(pr);sty.L.count++;counts[type]=(counts[type]||0)+1;
+    const pr={pts:flat,closed,L:sty.L,col:sty.col,lc:(sty.lw>60?3:sty.lw>35?2:sty.lw>18?1:0),bb:[x0,y0,x1,y1],info};prims.push(pr);sty.L.count++;counts[type]=(counts[type]||0)+1;
     if(snaps)for(const q of snaps)addSnap(sty,q[0],q[1],q[2],q[3],pr);}
   function ocs(it,M){
     const ex=gf(it,210,0),ey=gf(it,220,0),ez=gf(it,230,1);if(ex===0&&ey===0&&ez>0)return M;
@@ -341,8 +349,8 @@ function parseDXF(text){
         break}
       default:if(!SILENT[it.t])skipped[it.t]=(skipped[it.t]||0)+1;}}}
   convert(items.ENTITIES,{M:[1,0,0,1,0,0],color:0xffffff,layer:null,depth:0,z:0});
-  const map=new Map();for(const p of prims){let a=map.get(p.col);if(!a){a=[];map.set(p.col,a)}a.push(p)}
-  const buckets=[...map].map(([col,list])=>({col,list}));
+  const map=new Map();for(const p of prims){const k=p.col*8+(p.lc|0);let a=map.get(k);if(!a){a=[];map.set(k,a)}a.push(p)}
+  const buckets=[...map.values()].map(list=>({col:list[0].col,lc:list[0].lc|0,list}));
   return {prims,texts,buckets,layers:Object.values(layers).sort((a,b)=>a.name<b.name?-1:1),sx,sy,sz,st,sl,so,units,skipped,counts};
 }
 /*PARSER_END*/
@@ -352,8 +360,19 @@ const $=id=>document.getElementById(id);
 const cv=$('cv'),g=cv.getContext('2d');
 let W=0,H=0,dpr=1,DB=null,fileName='—';
 const view={cx:0,cy:0,s:1};
-const APP_VER='1.1.0';
-const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true};
+const APP_VER='1.2.0';
+const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true,ortho:false,lw:false,font:'naz',rev:false,dlm:'auto',dom:'auto'};
+const FONTS={naz:'نازنین',nazb:'نازنین پررنگ',titr:'تیتر',lotus:'لوتوس',zar:'زر',yagut:'یاقوت',mitra:'میترا',traffic:'ترافیک',sys:'فونت سیستم'};
+const fontCss=k=>(k==='sys'?'':"'F_"+k+"',")+"Tahoma,'DejaVu Sans',sans-serif";
+const AR=/[؀-ۿ]/,rv=s=>[...s].reverse().join('');
+let TS=[{name:'استاندارد',font:'naz',h:0,xs:1},{name:'تیتر',font:'titr',h:0,xs:1},{name:'ترافیک',font:'traffic',h:0,xs:1}],tsi=0;
+let DSL=[{name:'استاندارد',ts:0,h:0,ar:1,dec:-1,sc:1,pre:'',suf:'',arrow:'arrow',place:'above',ordPre:false,arcSym:true,eg:.4,eo:.6,col:0xffa500}],dsi=0;
+let CI={tpl:'X={x}\\nY={y}\\nZ={z}',pre:'P',n:1,auto:false,pt:true,dec:-1,ts:0};
+const COLS={16753920:'نارنجی',16765503:'زرد',3407769:'سبز',4171519:'آبی',16734815:'قرمز',16777215:'سفید'};
+let selSet=[],box=null,dimArc=null,GID=0;
+function saveCfg(){try{localStorage.setItem('mv_cfg',JSON.stringify({S:{dec:S.dec,snap:S.snap,snapE:S.snapE,snapM:S.snapM,snapC:S.snapC,dark:S.dark,ortho:S.ortho,lw:S.lw,font:S.font,rev:S.rev,dlm:S.dlm,dom:S.dom},TS,tsi,DSL,dsi,CI}))}catch(_){}}
+try{const c=JSON.parse(localStorage.getItem('mv_cfg')||'null');if(c){Object.assign(S,c.S||{});if(c.TS&&c.TS.length)TS=c.TS;if(c.DSL&&c.DSL.length)DSL=c.DSL;tsi=c.tsi|0;dsi=c.dsi|0;Object.assign(CI,c.CI||{})}}catch(_){}
+if(!TS[tsi])tsi=0;if(!DSL[dsi])dsi=0;
 let tool='pan',pts=[],tent=null,log=[],sel=null,hover=null,prec=null,holdT=null,hist=[],selSeg=0,pickSeg=0;
 const UNITS={1:'اینچ',2:'فوت',4:'mm',5:'cm',6:'m',7:'km'};
 const w2s=(x,y)=>[(x-view.cx)*view.s+W/2,H/2-(y-view.cy)*view.s];
@@ -380,7 +399,7 @@ function drawScene(view,W,H){
   const s=view.s,hw=W/2/s,hh=H/2/s,x0=view.cx-hw,x1=view.cx+hw,y0=view.cy-hh,y1=view.cy+hh;
   g.lineWidth=1;g.lineJoin='round';
   for(const bk of DB.buckets){
-    g.strokeStyle=dispCol(bk.col);g.beginPath();
+    g.strokeStyle=dispCol(bk.col);g.lineWidth=S.lw?1+(bk.lc|0)*0.9:1;g.beginPath();
     for(const p of bk.list){
       if(!p.L.on||p.del)continue;const b=p.bb;if(b[2]<x0||b[0]>x1||b[3]<y0||b[1]>y1)continue;
       const P=p.pts,n=P.length;
@@ -395,13 +414,7 @@ function drawScene(view,W,H){
   for(const t of DB.texts){
     if(!t.L.on||t.del)continue;const px=t.h*s;if(px<3.5)continue;
     if(t.x<x0-t.h*40||t.x>x1+t.h*40||t.y<y0-t.h*40||t.y>y1+t.h*40)continue;
-    const [sx,sy]=w2s(t.x,t.y);g.save();g.translate(sx,sy);g.rotate(-t.rot);
-    g.fillStyle=dispCol(t.col);g.font=px+'px sans-serif';g.textAlign=t.ah;
-    const lines=t.s.split('\n'),lh=px*1.35,n=lines.length;
-    let off=0;if(t.av==='middle')off=-(n-1)*lh/2;else if(t.av==='bottom')off=-(n-1)*lh;
-    g.textBaseline=t.av;
-    for(let i=0;i<n;i++)g.fillText(lines[i],0,off+i*lh);
-    g.restore();}
+    const [sx,sy]=w2s(t.x,t.y);paintText(t,s,sx,sy,dispCol(t.col));}
   if(sel&&sel.s!==undefined){const [a,b]=w2s(sel.x,sel.y);g.strokeStyle='#ffd23f';g.lineWidth=3;g.strokeRect(a-10,b-10,20,20);g.lineWidth=1}
   else if(sel){g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();const P=sel.pts;
     if(P.length===2){const [a,b]=w2s(P[0],P[1]);g.arc(a,b,8,0,7)}else{let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(sel.closed)g.closePath()}
@@ -422,27 +435,30 @@ function curState(){
     if(d.k==='tent')return {pts,tent:sn,log};
     if(d.k==='log')return {pts,tent,log:log.map((p,i)=>i===d.i?sn:p)};}
   return {pts,tent:sn,log};}
+function loupeSize(){return Math.round(Math.max(92,Math.min(132,Math.min(W,H)*0.27)))}
 function drawLoupe(){
   if(!prec)return;
-  const L=Math.round(Math.min(160,W*0.44)),Z=6;let lx=8,ly=8;
-  if(prec.x<L+36&&prec.y<L+36)lx=W-L-8;          // اگر انگشت نزدیک گوشه‌ی چپ است، ذره‌بین می‌رود راست
+  const L=loupeSize(),Z=6,bw=5,M=bw+6;let lx=M,ly=M;
+  if(prec.x<L+M+40&&prec.y<L+M+40)lx=W-L-M;
   const [wx,wy]=s2w(prec.x,prec.y),sn=prec.snap;
   g.save();g.beginPath();g.rect(lx,ly,L,L);g.clip();g.translate(lx,ly);
   drawScene({cx:wx,cy:wy,s:view.s*Z},L,L);
-  const k=view.s*Z,sx=L/2+(sn.x-wx)*k,sy=L/2-(sn.y-wy)*k;
+  const k=view.s*Z,sx=L/2+(sn.x-wx)*k,sy=L/2-(sn.y-wy)*k,fs=Math.max(9,Math.round(L/13));
   g.strokeStyle='rgba(255,210,63,.9)';g.lineWidth=1;g.beginPath();
-  g.moveTo(L/2-10,L/2);g.lineTo(L/2+10,L/2);g.moveTo(L/2,L/2-10);g.lineTo(L/2,L/2+10);g.stroke();   // مرکز = نوک انگشت
+  g.moveTo(L/2-10,L/2);g.lineTo(L/2+10,L/2);g.moveTo(L/2,L/2-10);g.lineTo(L/2,L/2+10);g.stroke();
   if(sn.t)markerPx(sx,sy,sn.t,'#33ff99');
-  g.fillStyle='rgba(10,12,16,.82)';g.fillRect(0,L-34,L,34);
-  g.fillStyle='#e8ecf2';g.font='11px ui-monospace,Menlo,monospace';g.textAlign='left';g.textBaseline='alphabetic';
-  g.fillText('X '+f(sn.x),5,L-20);g.fillText('Y '+f(sn.y),5,L-6);
-  if(sn.t){g.fillStyle='#33ff99';g.textAlign='right';g.fillText({e:'END',m:'MID',c:'CEN',i:'INS',n:'PNT'}[sn.t]||'',L-5,L-6)}
+  g.fillStyle='rgba(10,12,16,.82)';g.fillRect(0,L-fs*2.9,L,fs*2.9);
+  g.fillStyle='#e8ecf2';g.font=fs+'px ui-monospace,Menlo,monospace';g.textAlign='left';g.textBaseline='alphabetic';
+  g.fillText('X '+f(sn.x),5,L-fs*1.7);g.fillText('Y '+f(sn.y),5,L-fs*0.55);
+  if(sn.t){g.fillStyle='#33ff99';g.textAlign='right';g.font=fs+'px Tahoma,sans-serif';g.fillText({e:'انتها',m:'وسط',c:'مرکز',i:'درج',n:'نقطه'}[sn.t]||'',L-5,L-fs*0.55)}
   g.restore();
-  g.strokeStyle='#3ea6ff';g.lineWidth=2;g.strokeRect(lx,ly,L,L);g.lineWidth=1}
+  g.lineWidth=1.5;g.strokeStyle='rgba(0,0,0,.7)';g.strokeRect(lx-bw-0.75,ly-bw-0.75,L+2*bw+1.5,L+2*bw+1.5);
+  g.lineWidth=bw;g.strokeStyle='#ff8c00';g.strokeRect(lx-bw/2,ly-bw/2,L+bw,L+bw);g.lineWidth=1}
 function drawOverlay(){
   if(!DB||tool==='pan')return;
   const {pts,tent,log}=curState();
   const live=tent?pts.concat([tent]):pts;
+  overlayExtra(live,pts,tent);
   if(tool==='dist'||tool==='area'||tool==='angle'||tool==='line'||tool==='pl'||tool==='arc'){
     if(live.length>=2){g.strokeStyle='#ffd23f';g.lineWidth=2;g.beginPath();
       live.forEach((p,i)=>{const [a,b]=w2s(p.x,p.y);i?g.lineTo(a,b):g.moveTo(a,b)});
@@ -462,6 +478,7 @@ function drawOverlay(){
 /* ---- snap / pick ---- */
 const snapOK=t=>S.snap&&((t==='m')?S.snapM:(t==='c')?S.snapC:S.snapE);
 function snapAt(px,py){
+  {const ref=orthoRef();if(ref){let [qx,qy]=s2w(px,py);if(Math.abs(qx-ref.x)>=Math.abs(qy-ref.y))qy=ref.y;else qx=ref.x;[px,py]=w2s(qx,qy)}}
   const [wx,wy]=s2w(px,py);let best=-1,bd=1e18;const R=26;
   if(DB&&S.snap){const rw=R/view.s,x0=wx-rw,x1=wx+rw,y0=wy-rw,y1=wy+rw,{sx,sy,st,sl,so}=DB;
     for(let i=0,n=sx.length;i<n;i++){const x=sx[i];if(x<x0||x>x1)continue;const y=sy[i];if(y<y0||y>y1)continue;
@@ -483,7 +500,7 @@ function pickEntity(px,py){
 /* ---- gestures ---- */
 const ptrs=new Map();let moved=false,pinch=null;
 const pos=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
-const MEAS={id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,text:1};
+const MEAS={id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,text:1,coord:1,dal:1,dli:1,darc:1,dord:1};
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 /* --- ذره‌بین دقیق: نگه‌داشتن انگشت (یا گرفتن یک نقطه‌ی ثبت‌شده) → ذره‌بین؛ رها کردن → ثبت خودکار --- */
 function cancelHold(){if(holdT){clearTimeout(holdT);holdT=null}}
@@ -500,28 +517,28 @@ function commitPrec(){
   if(pr.drag&&!pr.moved){renderPanel();req();return}      // فقط لمس شد، جابه‌جا نشد
   const sn=pr.snap,d=pr.drag;
   if(d){if(d.k==='pts')pts[d.i]=sn;else if(d.k==='tent')tent=sn;else if(d.k==='log')log[d.i]=sn}
-  else if(tool==='id'||tool==='text'){tent=sn}
+  else if(tool==='id'||tool==='text'||tool==='coord'){tent=sn;if(tool==='coord'&&CI.auto)insertCoord()}
   else{if(tool==='angle'&&pts.length>=3)pts=[];pts.push(sn);tent=null;autoDraw()}
   renderPanel();req();}
 function startHold(p){
-  cancelHold();if(!DB||!MEAS[tool])return;
+  cancelHold();if(!DB||!MEAS[tool]||(tool==='darc'&&!dimArc))return;
   const gr=grabAt(p.x,p.y);
   if(gr){beginPrec(p,gr);return}
   holdT=setTimeout(()=>{holdT=null;if(ptrs.size===1&&!moved)beginPrec(p,null)},380);}
-cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const p=pos(e);
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const p=pos(e);if(openG){openG=null;buildTools();buildSub()}
   ptrs.set(e.pointerId,{x:p.x,y:p.y,sx:p.x,sy:p.y,t:performance.now()});
-  if(ptrs.size===1){moved=false;pinch=null;startHold(p)}
-  if(ptrs.size===2){cancelHold();if(prec){prec=null;renderPanel()}moved=true;const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}}});
+  if(ptrs.size===1){moved=false;pinch=null;box=null;startHold(p)}
+  if(ptrs.size===2){cancelHold();box=null;if(prec){prec=null;renderPanel()}moved=true;const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}}});
 cv.addEventListener('pointermove',e=>{
   const p=pos(e),o=ptrs.get(e.pointerId);
-  if(!o){if(e.pointerType==='mouse'&&tool!=='pan'&&tool!=='prop'&&tool!=='del'&&DB){hover=snapAt(p.x,p.y);req()}return}
+  if(!o){if(e.pointerType==='mouse'&&!NOPT[tool]&&DB){hover=snapAt(p.x,p.y);req()}return}
   if(prec&&ptrs.size===1){
     if(!prec.moved&&Math.hypot(p.x-prec.sx,p.y-prec.sy)>6)prec.moved=true;
     prec.x=p.x;prec.y=p.y;prec.snap=snapAt(p.x,p.y);o.x=p.x;o.y=p.y;renderPanel();req();return}
   if(holdT&&Math.hypot(p.x-o.sx,p.y-o.sy)>10)cancelHold();
   if(ptrs.size===1){
-    if(!moved&&Math.hypot(p.x-o.sx,p.y-o.sy)>8)moved=true;
-    if(moved){view.cx-=(p.x-o.x)/view.s;view.cy+=(p.y-o.y)/view.s;req()}
+    if(!moved&&Math.hypot(p.x-o.sx,p.y-o.sy)>8){moved=true;if(tool==='sel')box={x0:o.sx,y0:o.sy,x1:p.x,y1:p.y}}
+    if(moved){if(tool==='sel'&&box){box.x1=p.x;box.y1=p.y;req()}else{view.cx-=(p.x-o.x)/view.s;view.cy+=(p.y-o.y)/view.s;req()}}
     o.x=p.x;o.y=p.y;}
   else if(ptrs.size===2&&pinch){
     o.x=p.x;o.y=p.y;const [a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,c={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
@@ -529,6 +546,7 @@ cv.addEventListener('pointermove',e=>{
     view.cx=wp[0]-(c.x-W/2)/view.s;view.cy=wp[1]+(c.y-H/2)/view.s;pinch={d,cx:c.x,cy:c.y};req()}});
 function up(e){const o=ptrs.get(e.pointerId);if(!o)return;const was=ptrs.size;ptrs.delete(e.pointerId);cancelHold();
   if(prec){if(e.type==='pointerup'&&was===1)commitPrec();else{prec=null;renderPanel();req()}return}
+  if(box){if(was===1&&e.type==='pointerup')applyBox();box=null;if(ptrs.size<2)pinch=null;if(ptrs.size===1)moved=true;req();return}
   if(was===1&&!moved&&performance.now()-o.t<700&&e.type==='pointerup')onTap(o.sx,o.sy);
   if(ptrs.size<2)pinch=null;if(ptrs.size===1)moved=true}
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
@@ -548,7 +566,7 @@ function zoomExtents(){
 const f=v=>Number(v).toFixed(S.dec);
 const dmsStr=a=>{let d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;if(s>=59.995){s=0;m++}if(m>=60){m=0;d++}return d+'° '+m+"' "+s.toFixed(1)+'"'};
 const gon=a=>(a*400/360).toFixed(4)+' gon';
-const snapName=t=>({e:'snap: نقطه انتها / رأس',m:'snap: نقطه وسط',c:'snap: مرکز',i:'snap: نقطه درج / متن',n:'snap: نقطه (POINT)'}[t]||'بدون snap (نقطه‌ی آزاد)');
+const snapName=t=>({e:'اسنپ: انتها / رأس',m:'اسنپ: وسط',c:'اسنپ: مرکز',i:'اسنپ: نقطه‌ی درج / متن',n:'اسنپ: نقطه'}[t]||'بدون اسنپ (نقطه‌ی آزاد)');
 const row=(k,v,c='')=>`<div class="r ${c}"><span>${k}</span><b dir="ltr">${v}</b></div>`;
 const btns=a=>'<div class="btns">'+a.map(([act,l,dis,pri])=>`<button data-a="${act}" class="${pri?'pri':''}" ${dis?'disabled':''}>${l}</button>`).join('')+'</div>';
 function seg(a,b){const dx=b.x-a.x,dy=b.y-a.y;let az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;return {dx,dy,d:Math.hypot(dx,dy),az,dz:(b.z||0)-(a.z||0)}}
@@ -605,17 +623,17 @@ function renderPanel(){
       else{let tot=0;for(let i=1;i<live.length;i++)tot+=seg(live[i-1],live[i]).d;const s=seg(live[live.length-2],live[live.length-1]);
         h+=row('طول آخرین پاره',f(s.d),'big')+row('آزیموت',dmsStr(s.az));if(live.length>2)h+=row('طول کل',f(tot))}}
     h+=btns([['confirm','✓ ثبت نقطه',!tent,1]].concat(tool==='pl'?[['finish','پایان',pts.length<2],['finishc','بستن',pts.length<3]]:[]).concat([['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]]));}
+  else if(DIMT[tool]){h+=dimPanel(live,pts,tent)}
+  else if(tool==='coord'){h+=coordPanel(tent)}
+  else if(tool==='sel'){h+=selPanel()}
   else if(tool==='text'){
-    const th=(S.th>0)?S.th:autoH();
+    const th=(S.th>0)?S.th:'';
     if(!tent)h+='<div class="hint">محل متن را روی نقشه مشخص کنید (ضربه یا نگه‌داشتن)</div>';
     else h+=row('X',f(tent.x))+row('Y',f(tent.y))+row('Z',f(tent.z));
-    h+=`<div class="fl"><label for="tH">ارتفاع متن</label><input type="number" id="tH" inputmode="decimal" step="any" value="${th}"></div>`;
+    h+=`<div class="fl"><label for="tH">ارتفاع (خالی = از استایل)</label><input type="number" id="tH" inputmode="decimal" step="any" value="${th}"></div>`;
+    h+=`<div class="fl"><label>استایل</label><select id="tTs">${TS.map((x,i)=>`<option value="${i}" ${i===tsi?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`;
     h+=`<div class="fl"><input type="text" id="tT" placeholder="متن دلخواه" value="${esc(S.tt||'')}"></div>`;
-    h+=btns([['txyz','درج X Y Z',!tent,1],['txy','درج X Y',!tent],['ttxt','درج متن دلخواه',!tent],['clear','لغو',!tent]]);}
-  else if(tool==='del'){
-    if(!sel)h+='<div class="hint">روی یک شیء ضربه بزنید تا انتخاب شود، بعد «حذف» را بزنید. با دکمه‌ی ↶ بالای صفحه برمی‌گردد.</div>';
-    else h+=row('انتخاب‌شده',sel.s!==undefined?'متن':sel.info.type)+row('لایه',esc(sel.L.name));
-    h+=btns([['delsel','🗑 حذف',!sel,1],['clear','لغو انتخاب',!sel]]);}
+    h+=btns([['ttxt','درج متن',!tent,1],['tstyle','🔤 استایل متن'],['clear','لغو',!tent]]);}
   P.innerHTML=h;}
 function copyText(){
   const live=tent?pts.concat([tent]):pts.slice();let t='';
@@ -630,25 +648,41 @@ function copyText(){
 function flash(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#33c27f;color:#04210f;padding:6px 14px;border-radius:20px;font-weight:700;z-index:20';document.body.appendChild(d);setTimeout(()=>d.remove(),1100)}
 function onTap(x,y){
   if(!DB||tool==='pan')return;
-  if(tool==='prop'||tool==='del'){sel=pickEntity(x,y);selSeg=pickSeg}else{tent=snapAt(x,y);hover=null}
+  if(tool==='sel'){const o=pickEntity(x,y);
+    if(!o)selSet=[];else{const L=expandGrp([o]);selSet=selSet.includes(o)?selSet.filter(q=>!L.includes(q)):selSet.concat(L.filter(q=>!selSet.includes(q)))}}
+  else if(tool==='prop'){sel=pickEntity(x,y);selSeg=pickSeg}
+  else if(tool==='darc'&&!dimArc){const o=pickEntity(x,y);selSeg=pickSeg;const C=(o&&o.s===undefined)?arcOf(o):null;
+    if(C){sel=o;dimArc=C}else flash('این شیء کمان یا دایره نیست')}
+  else{tent=snapAt(x,y);hover=null;if(tool==='coord'&&CI.auto)insertCoord()}
   renderPanel();req()}
 $('panel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
   if(a==='confirm'&&tent){if(tool==='angle'&&pts.length>=3)pts=[];pts.push(tent);tent=null;autoDraw()}
   else if(a==='logadd'&&tent){log.push(tent);tent=null}
   else if(a==='undo'){pts.pop();tent=null}
-  else if(a==='clear'){pts=[];tent=null;sel=null;if(tool==='id')log=[]}
+  else if(a==='clear'){pts=[];tent=null;sel=null;selSet=[];dimArc=null;if(tool==='id')log=[]}
   else if(a==='finish'||a==='finishc'){finishPoly(a==='finishc')}
-  else if(a==='delsel'&&sel){doDelete(sel);sel=null}
-  else if(a==='txyz'&&tent){addTextAt(tent,'X='+f(tent.x)+'\nY='+f(tent.y)+'\nZ='+f(tent.z));tent=null}
-  else if(a==='txy'&&tent){addTextAt(tent,'X='+f(tent.x)+'\nY='+f(tent.y));tent=null}
-  else if(a==='ttxt'&&tent){const v=(($('tT')&&$('tT').value)||'').trim();if(v){S.tt='';addTextAt(tent,v);tent=null}else flash('متن را بنویسید')}
+  else if(a==='delset'){delSet()}
+  else if(a==='selall'){selSet=allVisible()}
+  else if(a==='ins'){insertCoord()}
+  else if(a==='cnreset'){CI.n=1;saveCfg()}
+  else if(a==='ttxt'&&tent){const v=(($('tT')&&$('tT').value)||'').trim();if(v){S.tt='';addTextAt(tent,v,TS[tsi]);tent=null}else flash('متن را بنویسید')}
+  else if(a==='dstyle'){openDS();return}
+  else if(a==='tstyle'){openTS();return}
+  else if(a&&a.startsWith('dm:')){S.dlm=a.slice(3);saveCfg()}
+  else if(a&&a.startsWith('om:')){S.dom=a.slice(3);saveCfg()}
   else if(a==='ctr'&&sel){showCenter();return}
   else if(a==='copy')copyText();
   renderPanel();req()});
-document.querySelectorAll('#tools button').forEach(b=>b.addEventListener('click',()=>{
-  tool=b.dataset.t;pts=[];tent=null;sel=null;hover=null;
-  document.querySelectorAll('#tools button').forEach(x=>x.classList.toggle('on',x===b));renderPanel();req()}));
-$('bUndo').onclick=undo;$('panel').addEventListener('input',e=>{if(e.target.id==='tH')S.th=parseFloat(e.target.value)||0;else if(e.target.id==='tT')S.tt=e.target.value});
+$('bUndo').onclick=undo;
+$('panel').addEventListener('input',e=>{const id=e.target.id,v=e.target.value;
+  if(id==='tH')S.th=parseFloat(v)||0;else if(id==='tT')S.tt=v;
+  else if(id==='cTpl'){CI.tpl=v;const s=$('cPre');if(s){const k=PRESETS.findIndex(p=>p[1]===v);s.value=k<0?'c':String(k)};const pv=$('cPrev');if(pv&&tent)pv.textContent=fillTpl(tent).split('\n').join(' ⏎ ');saveCfg()}
+  else if(id==='cPf'){CI.pre=v;saveCfg()}else if(id==='cN'){CI.n=parseInt(v)||1;saveCfg()}});
+$('panel').addEventListener('change',e=>{const id=e.target.id,v=e.target.value;
+  if(id==='cPre'){if(v!=='c')CI.tpl=PRESETS[+v][1];saveCfg();renderPanel()}
+  else if(id==='cDec'){CI.dec=parseInt(v);saveCfg();renderPanel()}
+  else if(id==='cTs'){CI.ts=+v;saveCfg()}else if(id==='tTs'){tsi=+v;saveCfg()}
+  else if(id==='cAuto'){CI.auto=e.target.checked;saveCfg()}else if(id==='cPt'){CI.pt=e.target.checked;saveCfg()}});
 $('bFit').onclick=zoomExtents;$('bIn').onclick=()=>zoomBy(1.6);$('bOut').onclick=()=>zoomBy(1/1.6);
 
 /* ---- ویرایش: ترسیم، متن، حذف، برگرداندن، ذخیره ---- */
@@ -666,28 +700,29 @@ function arc3(a,b,c){
   return {cx:ux,cy:uy,r,a0,sw,len:r*Math.abs(sw)};}
 function arcOf(p){
   if(!p||p.s!==undefined)return null;const I=p.info;
-  if(I.type==='CIRCLE'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:2*Math.PI*I.r,sw:2*Math.PI,chord:0};
-  if(I.type==='ARC'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:I.len,sw:I.sw,chord:2*I.r*Math.sin(Math.abs(I.sw)/2)};
+  if(I.type==='CIRCLE'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:2*Math.PI*I.r,sw:2*Math.PI,a0:0,chord:0};
+  if(I.type==='ARC'&&I.c)return {cx:I.c[0],cy:I.c[1],z:I.c[2],r:I.r,len:I.len,sw:I.sw,a0:Math.atan2(p.pts[1]-I.c[1],p.pts[0]-I.c[0]),chord:2*I.r*Math.sin(Math.abs(I.sw)/2)};
   if(I.arcs){const P=p.pts,np=P.length/2,j=selSeg;
     for(const [k0,k1] of I.arcs){const e=k1===0?np:k1;
       if(j>=k0&&j<e){const m=Math.floor((k0+e)/2),kk=k1%np,a={x:P[2*k0],y:P[2*k0+1]},b={x:P[2*m],y:P[2*m+1]},c={x:P[2*kk],y:P[2*kk+1]},A=arc3(a,b,c);
-        if(A)return {cx:A.cx,cy:A.cy,r:A.r,len:A.len,sw:A.sw,chord:Math.hypot(c.x-a.x,c.y-a.y)}}}}
+        if(A)return {cx:A.cx,cy:A.cy,r:A.r,len:A.len,sw:A.sw,a0:Math.atan2(a.y-A.cy,a.x-A.cx),chord:Math.hypot(c.x-a.x,c.y-a.y)}}}}
   return null}
 function updUndo(){const b=$('bUndo');if(b)b.disabled=!hist.length}
 function pushHist(kind,objs){hist.push({kind,objs});if(hist.length>300)hist.shift();updUndo()}
 function undo(){const h=hist.pop();if(!h)return;for(const o of h.objs)o.del=(h.kind==='add');updUndo();sel=null;renderPanel();req();flash('برگردانده شد')}
 function doDelete(o){o.del=true;pushHist('del',[o]);flash('حذف شد')}
-function addUserPrim(flat,closed,type,info,snaps){
-  const L=DB.mk,col=0xffa500;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
+function addUserPrim(flat,closed,type,info,snaps,col,lc){
+  const L=DB.mk;col=col||0xffa500;lc=lc===undefined?1:lc;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
   for(let i=0;i<flat.length;i+=2){x0=Math.min(x0,flat[i]);x1=Math.max(x1,flat[i]);y0=Math.min(y0,flat[i+1]);y1=Math.max(y1,flat[i+1])}
-  info.type=type;info.mine=true;const pr={pts:flat,closed,L,col,bb:[x0,y0,x1,y1],info};
-  DB.prims.push(pr);let bk=DB.buckets.find(b=>b.col===col);if(!bk){bk={col,list:[]};DB.buckets.push(bk)}bk.list.push(pr);L.count++;
+  info.type=type;info.mine=true;const pr={pts:flat,closed,L,col,lc,bb:[x0,y0,x1,y1],info};
+  DB.prims.push(pr);let bk=DB.buckets.find(b=>b.col===col&&(b.lc|0)===lc);if(!bk){bk={col,lc,list:[]};DB.buckets.push(bk)}bk.list.push(pr);L.count++;
   for(const q of snaps){DB.sx.push(q[0]);DB.sy.push(q[1]);DB.sz.push(q[2]);DB.st.push(q[3]);DB.sl.push(L);DB.so.push(pr)}
   return pr}
-function addUserText(x,y,z,h,s){
-  const L=DB.mk,tx={x,y,h,rot:0,s,col:0xffa500,L,ah:'left',av:'alphabetic',mine:true,z:z||0};
+function addUserText(x,y,z,h,s,o){o=o||{};
+  const L=DB.mk,tx={x,y,h,rot:o.rot||0,s,col:o.col||0xffa500,L,ah:o.ah||'left',av:o.av||'alphabetic',mine:true,z:z||0,f:o.f,xs:o.xs,grp:o.grp};
   DB.texts.push(tx);L.count++;DB.sx.push(x);DB.sy.push(y);DB.sz.push(z||0);DB.st.push('i');DB.sl.push(L);DB.so.push(tx);return tx}
 function autoDraw(){
+  if(DIMT[tool]){dimAuto();return}
   if(tool==='line'&&pts.length>=2){
     const a=pts[0],b=pts[1],za=a.z||0,zb=b.z||0;
     const pr=addUserPrim([a.x,a.y,b.x,b.y],false,'LINE',{z:[za,zb]},[[a.x,a.y,za,'e'],[b.x,b.y,zb,'e'],[(a.x+b.x)/2,(a.y+b.y)/2,(za+zb)/2,'m']]);
@@ -707,12 +742,12 @@ function finishPoly(closed){
   const flat=[],sn=[];for(const p of pts){flat.push(p.x,p.y);sn.push([p.x,p.y,p.z||0,'e'])}
   const pr=addUserPrim(flat,!!closed,'LWPOLYLINE',{zs:pts.map(p=>p.z||0)},sn);
   pushHist('add',[pr]);pts=[];tent=null;flash('پلی‌لاین ثبت شد')}
-function addTextAt(p,str){
-  const h=(S.th>0)?S.th:autoH(),z=p.z||0;
-  const pm=addUserPrim([p.x,p.y],false,'POINT',{z:[z]},[[p.x,p.y,z,'n']]);
-  const tx=addUserText(p.x+h*0.3,p.y+h*0.3,z,h,str);pushHist('add',[pm,tx]);flash('درج شد')}
+function addTextAt(p,str,ts,wp){ts=ts||TS[tsi]||TS[0];
+  const h=(S.th>0&&tool==='text')?S.th:(ts.h>0?ts.h:autoH()),z=p.z||0,objs=[],gid='g'+(++GID);
+  if(wp!==false)objs.push(addUserPrim([p.x,p.y],false,'POINT',{z:[z],grp:gid},[[p.x,p.y,z,'n']]));
+  objs.push(addUserText(p.x+h*0.3,p.y+h*0.3,z,h,str,{f:ts.font,xs:ts.xs,grp:gid}));pushHist('add',objs);flash('درج شد')}
 function showCenter(){const C=arcOf(sel);if(!C)return;
-  document.querySelector('#tools button[data-t="id"]').click();tent={x:C.cx,y:C.cy,z:C.z||0,t:'c'};renderPanel();req()}
+  setTool('id');tent={x:C.cx,y:C.cy,z:C.z||0,t:'c'};renderPanel();req()}
 const ACI_CACHE=new Map();
 function acin(rgb){rgb&=0xffffff;let v=ACI_CACHE.get(rgb);if(v)return v;
   const r=(rgb>>16)&255,gg=(rgb>>8)&255,b=rgb&255;let best=7,bd=1e18;
@@ -742,7 +777,7 @@ function buildDXF(only){
     const ln=useL(t.L),col=acin(t.col),rot=t.rot*180/Math.PI;
     String(t.s).split('\n').forEach((s,i)=>{if(!s.trim())return;
       const dy=i*t.h*1.35,x=t.x+Math.sin(t.rot)*dy,y=t.y-Math.cos(t.rot)*dy;
-      w(0,'TEXT');w(8,ln);w(62,col);w(10,num(x));w(20,num(y));w(30,num(t.z));w(40,num(t.h));w(1,enc(s));w(50,num(rot));
+      w(0,'TEXT');w(8,ln);w(62,col);w(10,num(x));w(20,num(y));w(30,num(t.z));w(40,num(t.h));w(1,enc(s));w(50,num(rot));if(t.xs&&t.xs!==1)w(41,num(t.xs));
       const a=AH[t.ah]||0,v=AV[t.av]||0;if(a||v){w(72,a);w(73,v);w(11,num(x));w(21,num(y));w(31,num(t.z))}})}
   const T=[],tw=(c,v)=>{T.push(String(c),String(v))};
   tw(0,'SECTION');tw(2,'HEADER');tw(9,'$ACADVER');tw(1,'AC1009');tw(0,'ENDSEC');
@@ -764,7 +799,7 @@ function reportHTML(){
   return `<div class="ver" dir="ltr" style="text-align:left">${esc(c||'—')}</div>`+(sk?`<div class="ver">نمایش داده نشد: <span dir="ltr">${esc(sk)}</span></div>`:'')}
 
 /* ---- sheets ---- */
-function openSheet(h){$('sheetBox').innerHTML=h;$('sheet').style.display='flex'}
+function openSheet(h){$('sheetBox').oninput=$('sheetBox').onchange=null;$('sheetBox').innerHTML=h;$('sheet').style.display='flex'}
 $('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('sheet').style.display='none'});
 function msg(title,body){openSheet(`<h3>${title}</h3><div style="line-height:2">${body}</div><div class="btns"><button class="pri" onclick="document.getElementById('sheet').style.display='none'">باشه</button></div>`)}
 $('bLayers').onclick=()=>{
@@ -779,25 +814,274 @@ $('bLayers').onclick=()=>{
 $('bSet').onclick=()=>{
   openSheet(`<h3>تنظیمات</h3>
   <div class="lr"><span class="nm" style="text-align:right;direction:rtl">تعداد رقم اعشار</span><select id="sDec">${[0,1,2,3,4,5,6].map(n=>`<option ${n===S.dec?'selected':''}>${n}</option>`).join('')}</select></div>
-  <label class="lr"><input type="checkbox" id="sSnap" ${S.snap?'checked':''}><span class="nm" style="direction:rtl;text-align:right">فعال بودن Snap</span></label>
-  <label class="lr"><input type="checkbox" id="sE" ${S.snapE?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به انتها / رأس / نقطه‌ی درج</span></label>
-  <label class="lr"><input type="checkbox" id="sM" ${S.snapM?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به وسط</span></label>
-  <label class="lr"><input type="checkbox" id="sC" ${S.snapC?'checked':''}><span class="nm" style="direction:rtl;text-align:right">Snap به مرکز دایره/کمان</span></label>
+  <label class="lr"><input type="checkbox" id="sSnap" ${S.snap?'checked':''}><span class="nm" style="direction:rtl;text-align:right">فعال بودن اسنپ</span></label>
+  <label class="lr"><input type="checkbox" id="sE" ${S.snapE?'checked':''}><span class="nm" style="direction:rtl;text-align:right">اسنپ به انتها / رأس / نقطه‌ی درج</span></label>
+  <label class="lr"><input type="checkbox" id="sM" ${S.snapM?'checked':''}><span class="nm" style="direction:rtl;text-align:right">اسنپ به وسط</span></label>
+  <label class="lr"><input type="checkbox" id="sC" ${S.snapC?'checked':''}><span class="nm" style="direction:rtl;text-align:right">اسنپ به مرکز دایره/کمان</span></label>
   <label class="lr"><input type="checkbox" id="sD" ${S.dark?'checked':''}><span class="nm" style="direction:rtl;text-align:right">پس‌زمینه‌ی تیره</span></label>
+  <div class="lr"><span class="nm" style="text-align:right;direction:rtl">فونت متن‌های نقشه</span><select id="sFont">${opts(FONTS,S.font)}</select></div>
+  <label class="lr"><input type="checkbox" id="sRev" ${S.rev?'checked':''}><span class="nm" style="direction:rtl;text-align:right">وارونه‌کردن ترتیب حروف فارسی (اگر متن فارسی نقشه برعکس دیده می‌شود)</span></label>
+  <div class="btns"><button id="sDS">🎨 استایل دایمنشن</button><button id="sTS">🔤 استایل متن</button></div>
   <div class="btns" style="margin-top:12px"><button id="xMine">💾 ذخیره‌ی ترسیم‌ها و متن‌های من</button><button id="xAll">💾 ذخیره‌ی کل نقشه (ساده‌شده)</button></div>
   <div class="sn">خروجی، فایل DXF متنی است و در اتوکد باز می‌شود. اگر گوشی پنجره‌ی اشتراک‌گذاری باز کرد، «ذخیره در فایل‌ها» را بزنید.</div>
   <h3 style="margin-top:14px">گزارش فایل</h3>${reportHTML()}
-  <div class="ver">نسخه‌ی ${APP_VER}<br>تازه‌ها: ترسیم خط، پلی‌لاین و کمان؛ درج مختصات و متن؛ پاک کردن و برگرداندن؛ مرکز و شعاع کمان؛ هاشور؛ ذخیره‌ی DXF</div>`);
-  const b=$('sheetBox');b.onchange=()=>{S.dec=+$('sDec').value;S.snap=$('sSnap').checked;S.snapE=$('sE').checked;S.snapM=$('sM').checked;S.snapC=$('sC').checked;S.dark=$('sD').checked;renderPanel();req()};
+  <div class="ver">نسخه‌ی ${APP_VER}<br>تازه‌ها: انتخاب پنجره‌ای آبی و سبز؛ دایمنشن مایل، مستقیم، ارک و اورینت؛ استایل دایمنشن و متن؛ درج مختصات یا شناسه با قالب دلخواه؛ دکمه‌های اسنپ، عمود و ضخامت خط؛ فونت‌های فارسی؛ ذره‌بین جدید؛ گروه‌بندی دستورها</div>`);
+  const b=$('sheetBox');b.onchange=()=>{S.dec=+$('sDec').value;S.snap=$('sSnap').checked;S.snapE=$('sE').checked;S.snapM=$('sM').checked;S.snapC=$('sC').checked;S.dark=$('sD').checked;S.font=$('sFont').value;S.rev=$('sRev').checked;syncChips();saveCfg();renderPanel();req()};
   const ex=only=>{if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');const base=(fileName||'map').replace(/\.[^.]+$/,'');saveText(base+(only?'-markup':'-edit')+'.dxf',buildDXF(only))};
   if($('xMine'))$('xMine').onclick=()=>ex(true);
   if($('xAll'))$('xAll').onclick=()=>ex(false);
+  $('sDS').onclick=openDS;$('sTS').onclick=openTS;
 };
+
+/* ================= نسخه‌ی ۱٫۲ ================= */
+const NOPT={pan:1,prop:1,sel:1};
+const DIMT={dal:'مایل',dli:'مستقیم',darc:'ارک',dord:'اورینت'};
+const opts=(o,sel)=>Object.entries(o).map(([k,v])=>`<option value="${k}" ${String(k)===String(sel)?'selected':''}>${v}</option>`).join('');
+const gidOf=o=>o.grp||(o.info&&o.info.grp);
+
+/* ---- متن ---- */
+function paintText(t,s,sx,sy,col){
+  const px=t.h*s;g.save();g.translate(sx,sy);g.rotate(-t.rot);if(t.xs&&t.xs!==1)g.scale(t.xs,1);
+  g.fillStyle=col;g.font=(t.b?'bold ':'')+px+'px '+fontCss(t.f||S.font);g.textAlign=t.ah;g.textBaseline=t.av;
+  const str=(S.rev&&!t.mine&&AR.test(t.s))?rv(t.s):t.s;
+  const lines=str.split('\n'),lh=px*1.35,n=lines.length;let off=0;
+  if(t.av==='middle')off=-(n-1)*lh/2;else if(t.av==='bottom')off=-(n-1)*lh;
+  for(let i=0;i<n;i++)g.fillText(lines[i],0,off+i*lh);
+  g.restore()}
+function loadFonts(){if(!document.fonts)return;Object.keys(FONTS).forEach(k=>{if(k!=='sys')document.fonts.load('16px F_'+k,'ابپ 123').then(()=>req()).catch(()=>{})})}
+
+/* ---- عمود (محدودیت جهت) ---- */
+function orthoRef(){
+  if(!S.ortho||(prec&&prec.drag&&prec.drag.k!=='tent'))return null;
+  if((tool==='dist'||tool==='area'||tool==='line'||tool==='pl')&&pts.length)return pts[pts.length-1];
+  if((tool==='dal'||tool==='dli')&&pts.length===1)return pts[0];
+  return null}
+
+/* ---- انتخاب پنجره‌ای ---- */
+function expandGrp(list){const gs=new Set(list.map(gidOf).filter(Boolean));if(!gs.size)return list;const out=new Set(list);
+  for(const p of DB.prims)if(!p.del&&gs.has(gidOf(p)))out.add(p);for(const t of DB.texts)if(!t.del&&gs.has(gidOf(t)))out.add(t);return [...out]}
+function segHitsRect(ax,ay,bx,by,x0,y0,x1,y1){
+  let t0=0,t1=1;const dx=bx-ax,dy=by-ay,p=[-dx,dx,-dy,dy],q=[ax-x0,x1-ax,ay-y0,y1-ay];
+  for(let i=0;i<4;i++){if(p[i]===0){if(q[i]<0)return false}else{const r=q[i]/p[i];if(p[i]<0){if(r>t1)return false;if(r>t0)t0=r}else{if(r<t0)return false;if(r<t1)t1=r}}}
+  return true}
+function boxPick(xa,ya,xb,yb,cross){
+  const x0=Math.min(xa,xb),x1=Math.max(xa,xb),y0=Math.min(ya,yb),y1=Math.max(ya,yb),out=[];
+  for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;
+    if(b[2]<x0||b[0]>x1||b[3]<y0||b[1]>y1)continue;
+    if(!cross){if(b[0]>=x0&&b[2]<=x1&&b[1]>=y0&&b[3]<=y1)out.push(p);continue}
+    const P=p.pts,n=P.length;let hit=n===2;
+    for(let i=0;i<n&&!hit;i+=2)if(P[i]>=x0&&P[i]<=x1&&P[i+1]>=y0&&P[i+1]<=y1)hit=true;
+    if(!hit){const m=p.closed?n:n-2;for(let i=0;i<m&&!hit;i+=2){const j=(i+2)%n;if(segHitsRect(P[i],P[i+1],P[j],P[j+1],x0,y0,x1,y1))hit=true}}
+    if(hit)out.push(p)}
+  for(const t of DB.texts){if(!t.L.on||t.del)continue;if(t.x>=x0&&t.x<=x1&&t.y>=y0&&t.y<=y1)out.push(t)}
+  return out}
+function applyBox(){const b=box;if(!b||Math.abs(b.x1-b.x0)<6||Math.abs(b.y1-b.y0)<6){selSet=[];renderPanel();req();return}
+  const [a0,b0]=s2w(b.x0,b.y0),[a1,b1]=s2w(b.x1,b.y1);
+  selSet=expandGrp(boxPick(a0,b0,a1,b1,b.x1<b.x0));renderPanel();req()}
+function allVisible(){return DB.prims.filter(p=>p.L.on&&!p.del).concat(DB.texts.filter(t=>t.L.on&&!t.del))}
+function delSet(){const L=expandGrp(selSet).filter(o=>!o.del);if(!L.length)return;for(const o of L)o.del=true;pushHist('del',L);selSet=[];flash('حذف شد: '+L.length+' شیء')}
+function selPanel(){let h='';
+  if(!selSet.length)h+='<div class="hint">ضربه: انتخاب تکی (دوباره ضربه = برداشتن) • کشیدن به سمت راست: پنجره‌ی <b style="color:#3ea6ff">آبی</b> (فقط اشیای کاملاً داخل) • کشیدن به سمت چپ: پنجره‌ی <b style="color:#33c27f">سبز</b> (هرچه لمس شود) • حرکت و بزرگ‌نمایی: با دو انگشت</div>';
+  else{const c={};let len=0;for(const o of selSet){const k=o.s!==undefined?'متن':o.info.type;c[k]=(c[k]||0)+1;if(o.s===undefined)len+=entInfo(o).len}
+    h+=row('تعداد انتخاب',selSet.length,'big')+row('جمع طول',f(len))+`<div class="sn" dir="ltr">${Object.entries(c).map(([k,v])=>k+'×'+v).join(' , ')}</div>`}
+  return h+btns([['delset','🗑 حذف انتخاب‌شده‌ها',!selSet.length,1],['selall','انتخاب همه'],['clear','لغو انتخاب',!selSet.length]])}
+
+/* ---- دایمنشن ---- */
+const dsCur=()=>DSL[dsi]||DSL[0],tsOf=d=>TS[d.ts]||TS[0];
+function dimTH(){const d=dsCur(),ts=tsOf(d);return d.h>0?d.h:(ts.h>0?ts.h:autoH())}
+const ROT=r=>{while(r>Math.PI/2+1e-9)r-=Math.PI;while(r<=-Math.PI/2+1e-9)r+=Math.PI;return r};
+function dimStr(v,pre){const d=dsCur(),dec=d.dec>=0?d.dec:S.dec;return (d.pre||'')+(pre||'')+(v*(d.sc||1)).toFixed(dec)+(d.suf||'')}
+function arrowPts(tx,ty,ux,uy,A,type){
+  const nx=-uy,ny=ux;
+  if(type==='tick'){const k=A*0.5*0.7071,dx=(ux+nx)*k,dy=(uy+ny)*k;return {f:[tx-dx,ty-dy,tx+dx,ty+dy],closed:false}}
+  const w=A*0.28,bx=tx+ux*A,by=ty+uy*A;return {f:[tx,ty,bx+nx*w,by+ny*w,bx-nx*w,by-ny*w],closed:true}}
+function dimGeom(kind,P,C){
+  const d=dsCur(),ts=tsOf(d),h=dimTH(),A=h*(d.ar>0?d.ar:1),eg=h*(d.eg>=0?d.eg:.4),eo=h*(d.eo>=0?d.eo:.6),polys=[];
+  const push=(f,c)=>polys.push({f,closed:!!c});
+  const arrow=(x,y,ux,uy)=>{const a=arrowPts(x,y,ux,uy,A,d.arrow);push(a.f,a.closed)};
+  let txt=null,m=null;
+  if(kind==='dal'||kind==='dli'){
+    if(P.length<2)return {polys:[],h};
+    const p1=P[0],p2=P[1];
+    if(P.length<3){push([p1.x,p1.y,p2.x,p2.y]);return {polys,h}}
+    const p3=P[2];let dx,dy;
+    if(kind==='dal'){const L=Math.hypot(p2.x-p1.x,p2.y-p1.y);if(L<1e-12)return null;dx=(p2.x-p1.x)/L;dy=(p2.y-p1.y)/L}
+    else{let mm=S.dlm;if(mm==='auto')mm=Math.abs(p3.y-(p1.y+p2.y)/2)>=Math.abs(p3.x-(p1.x+p2.x)/2)?'h':'v';
+      m=mm;if(mm==='h'){dx=p2.x>=p1.x?1:-1;dy=0}else{dx=0;dy=p2.y>=p1.y?1:-1}}
+    const nx=-dy,ny=dx,o1=(p3.x-p1.x)*nx+(p3.y-p1.y)*ny,o2=(p3.x-p2.x)*nx+(p3.y-p2.y)*ny;
+    const a={x:p1.x+nx*o1,y:p1.y+ny*o1},b={x:p2.x+nx*o2,y:p2.y+ny*o2};
+    const val=Math.abs((b.x-a.x)*dx+(b.y-a.y)*dy),s1=o1<0?-1:1,s2=o2<0?-1:1;
+    push([p1.x+nx*eg*s1,p1.y+ny*eg*s1,a.x+nx*eo*s1,a.y+ny*eo*s1]);
+    push([p2.x+nx*eg*s2,p2.y+ny*eg*s2,b.x+nx*eo*s2,b.y+ny*eo*s2]);
+    const s=dimStr(val),tw=s.length*h*0.55*(ts.xs||1),rot=ROT(Math.atan2(dy,dx)),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,inside=val>=2.2*A;
+    const above={x:mx-Math.sin(rot)*h*.35,y:my+Math.cos(rot)*h*.35,rot,s,ah:'center',av:'alphabetic'};
+    if(inside){arrow(a.x,a.y,dx,dy);arrow(b.x,b.y,-dx,-dy);
+      if(d.place==='center'&&val>tw*1.3){push([a.x,a.y,mx-dx*tw/2,my-dy*tw/2]);push([mx+dx*tw/2,my+dy*tw/2,b.x,b.y]);txt={x:mx,y:my,rot,s,ah:'center',av:'middle'}}
+      else{push([a.x,a.y,b.x,b.y]);txt=above}}
+    else{arrow(a.x,a.y,-dx,-dy);arrow(b.x,b.y,dx,dy);push([a.x-dx*A*1.6,a.y-dy*A*1.6,a.x,a.y]);push([b.x,b.y,b.x+dx*A*1.6,b.y+dy*A*1.6]);txt=above}
+    return {polys,txt,h,val,m}}
+  if(kind==='darc'){
+    if(!C)return null;if(P.length<1)return {polys:[],h};
+    const p=P[0],rr=Math.hypot(p.x-C.cx,p.y-C.cy);if(rr<1e-9)return null;
+    const sw=C.sw,a0=C.a0,full=Math.abs(sw)>2*Math.PI-1e-6,sg=sw>=0?1:-1,out=rr>=C.r?1:-1;
+    const n=Math.max(8,Math.ceil(Math.abs(sw)/(Math.PI/90))),fl=[];
+    for(let q=0;q<=n;q++){const t=a0+sw*q/n;fl.push(C.cx+rr*Math.cos(t),C.cy+rr*Math.sin(t))}
+    push(fl,full);
+    if(!full){[a0,a0+sw].forEach((t,i)=>{const c=Math.cos(t),s=Math.sin(t);
+      push([C.cx+(C.r+out*eg)*c,C.cy+(C.r+out*eg)*s,C.cx+(rr+out*eo)*c,C.cy+(rr+out*eo)*s]);
+      const k=i?-1:1;arrow(C.cx+rr*c,C.cy+rr*s,-s*sg*k,c*sg*k)})}
+    const tm=a0+sw/2,rot=ROT(tm+Math.PI/2),bx=C.cx+rr*Math.cos(tm),by=C.cy+rr*Math.sin(tm);
+    txt={x:bx-Math.sin(rot)*h*.35,y:by+Math.cos(rot)*h*.35,rot,s:dimStr(C.len,d.arcSym?'⌒ ':''),ah:'center',av:'alphabetic'};
+    return {polys,txt,h,val:C.len}}
+  if(kind==='dord'){
+    if(P.length<1)return null;const F=P[0],cr=[];
+    for(let q=0;q<12;q++){const t=q*Math.PI/6;cr.push(F.x+h*.25*Math.cos(t),F.y+h*.25*Math.sin(t))}push(cr,true);
+    if(P.length<2)return {polys,h};
+    const E=P[1];let mm=S.dom;if(mm==='auto')mm=Math.abs(E.y-F.y)>=Math.abs(E.x-F.x)?'x':'y';
+    const Q=mm==='x'?{x:F.x,y:E.y}:{x:E.x,y:F.y},L=Math.hypot(Q.x-F.x,Q.y-F.y);
+    if(L<1e-12)return {polys,h,m:mm};
+    const ux=(Q.x-F.x)/L,uy=(Q.y-F.y)/L,g0=h*.25;push([F.x+ux*g0,F.y+uy*g0,Q.x,Q.y]);
+    const v=mm==='x'?F.x:F.y,s=dimStr(v,d.ordPre?(mm==='x'?'X=':'Y='):'');
+    if(mm==='x'){const sg=uy>=0?1:-1;txt={x:Q.x,y:Q.y+sg*h*.3,rot:0,s,ah:'center',av:sg>0?'alphabetic':'top'}}
+    else{const sg=ux>=0?1:-1;txt={x:Q.x+sg*h*.3,y:Q.y,rot:0,s,ah:sg>0?'left':'right',av:'middle'}}
+    return {polys,txt,h,val:v,m:mm}}
+  return null}
+function makeDim(){
+  const geo=dimGeom(tool,pts,dimArc);if(!geo||!geo.txt){flash('اندازه‌گذاری ممکن نشد');return false}
+  const d=dsCur(),ts=tsOf(d),col=d.col,gid='g'+(++GID),objs=[],z=pts[0].z||0;
+  for(const q of geo.polys)objs.push(addUserPrim(q.f,q.closed,'DIM',{grp:gid},[],col,1));
+  const T=geo.txt;objs.push(addUserText(T.x,T.y,z,geo.h,T.s,{rot:T.rot,ah:T.ah,av:T.av,f:ts.font,xs:ts.xs,col,grp:gid}));
+  pushHist('add',objs);flash('اندازه‌گذاری ثبت شد');return true}
+function dimAuto(){const need={dal:3,dli:3,dord:2,darc:1}[tool];if(tool==='darc'&&!dimArc)return;if(pts.length<need)return;
+  if(makeDim()){pts=[];if(tool==='darc'){dimArc=null;sel=null}}else pts.pop()}
+function dimPanel(live,pts,tent){
+  let h='';const STEP={dal:['نقطه‌ی اول','نقطه‌ی دوم','محل خط اندازه (با نگه‌داشتن و کشیدن جابه‌جا می‌شود)'],
+    dli:['نقطه‌ی اول','نقطه‌ی دوم','محل خط اندازه (بالا/پایین = افقی، چپ/راست = عمودی)'],
+    dord:['نقطه‌ای که مختصاتش را می‌خواهید','محل عدد (جهت کشیدن، محور را تعیین می‌کند)'],darc:['محل خط اندازه‌ی کمان']}[tool];
+  if(tool==='darc'&&!dimArc)h+='<div class="hint">روی یک کمان یا دایره ضربه بزنید.</div>';
+  else{
+    if(pts.length<STEP.length)h+=`<div class="hint">${STEP[pts.length]} را مشخص کنید، سپس «ثبت نقطه» را بزنید</div>`;
+    const geo=dimGeom(tool,live,dimArc);
+    if(geo&&geo.txt){h+=row('مقدار',esc(geo.txt.s),'big');if(geo.m)h+=row(tool==='dord'?'محور':'جهت',tool==='dord'?geo.m.toUpperCase():(geo.m==='h'?'افقی':'عمودی'))}}
+  if(tool==='dli')h+=btns([['dm:auto','خودکار',0,S.dlm==='auto'],['dm:h','افقی',0,S.dlm==='h'],['dm:v','عمودی',0,S.dlm==='v']]);
+  if(tool==='dord')h+=btns([['om:auto','خودکار',0,S.dom==='auto'],['om:x','فقط X',0,S.dom==='x'],['om:y','فقط Y',0,S.dom==='y']]);
+  h+=`<div class="sn">استایل دایمنشن: ${esc(dsCur().name)}</div>`;
+  return h+btns([['confirm','✓ ثبت نقطه',!tent,1],['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent&&!dimArc],['dstyle','🎨 استایل']])}
+
+/* ---- درج مختصات / شناسه ---- */
+const PRESETS=[['X Y Z','X={x}\\nY={y}\\nZ={z}'],['فقط X و Y','X={x}\\nY={y}'],['شماره + X Y Z','{id}\\nX={x}\\nY={y}\\nZ={z}'],['شماره + Z','{id}  {z}'],['فقط شماره','{id}'],['فقط ارتفاع Z','{z}'],['شمال / شرق / ارتفاع','N={y}\\nE={x}\\nZ={z}'],['یک‌خطی','{id}, {x}, {y}, {z}']];
+function fillTpl(p){const dec=CI.dec>=0?CI.dec:S.dec,id=CI.pre+CI.n;
+  return CI.tpl.replace(/\\n/g,'\n').replace(/\{id\}/g,id).replace(/\{n\}/g,CI.n).replace(/\{x\}/g,p.x.toFixed(dec)).replace(/\{y\}/g,p.y.toFixed(dec)).replace(/\{z\}/g,(p.z||0).toFixed(dec))}
+function insertCoord(){if(!tent)return;const p=tent;addTextAt(p,fillTpl(p),TS[CI.ts]||TS[0],CI.pt);CI.n++;saveCfg();tent=null;renderPanel();req()}
+function coordPanel(tent){
+  const pi=PRESETS.findIndex(p=>p[1]===CI.tpl);let h='';
+  h+=`<div class="fl"><label>قالب</label><select id="cPre">${PRESETS.map((p,i)=>`<option value="${i}" ${i===pi?'selected':''}>${p[0]}</option>`).join('')}<option value="c" ${pi<0?'selected':''}>دلخواه</option></select></div>`;
+  h+=`<div class="fl"><input type="text" id="cTpl" dir="ltr" value="${esc(CI.tpl)}"></div><div class="sn">جانشین‌ها: <span dir="ltr">{x} {y} {z} {id} {n}</span> — برای خط تازه بنویسید <span dir="ltr">\\n</span></div>`;
+  h+=`<div class="fl"><label>پیشوند شماره</label><input type="text" id="cPf" dir="ltr" style="width:80px" value="${esc(CI.pre)}"><label>شماره‌ی بعدی</label><input type="number" id="cN" style="width:90px" value="${CI.n}"></div>`;
+  h+=`<div class="fl"><label>رقم اعشار</label><select id="cDec"><option value="-1" ${CI.dec<0?'selected':''}>پیش‌فرض</option>${[0,1,2,3,4,5,6].map(n=>`<option ${CI.dec===n?'selected':''}>${n}</option>`).join('')}</select><label>استایل متن</label><select id="cTs">${TS.map((x,i)=>`<option value="${i}" ${i===CI.ts?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`;
+  h+=`<label class="lr"><input type="checkbox" id="cAuto" ${CI.auto?'checked':''}><span class="nm" style="direction:rtl;text-align:right">درج خودکار هنگام رها کردن انگشت</span></label>`;
+  h+=`<label class="lr"><input type="checkbox" id="cPt" ${CI.pt?'checked':''}><span class="nm" style="direction:rtl;text-align:right">گذاشتن نقطه‌ی علامت کنار متن</span></label>`;
+  h+=tent?`<div class="r"><span>پیش‌نمایش</span><b dir="ltr" id="cPrev">${esc(fillTpl(tent).split('\n').join(' ⏎ '))}</b></div>`:'<div class="hint">محل را روی نقشه مشخص کنید (ضربه یا نگه‌داشتن)</div>';
+  return h+btns([['ins','＋ درج',!tent,1],['cnreset','شماره از اول'],['clear','لغو',!tent]])}
+
+/* ---- گروه‌های ابزار ---- */
+const GROUPS=[
+ {id:'pan',ic:'✋',nm:'حرکت',t:'pan'},
+ {id:'meas',ic:'📏',nm:'اندازه',items:[['id','📍','مختصات'],['dist','📏','فاصله'],['area','⬚','مساحت'],['angle','∠','زاویه'],['prop','ℹ️','ویژگی']]},
+ {id:'dim',ic:'📐',nm:'دایمنشن',items:[['dal','↗','مایل'],['dli','↔','مستقیم'],['darc','⌒','ارک'],['dord','⊢','اورینت'],['@ds','🎨','استایل دایمنشن']]},
+ {id:'draw',ic:'✏️',nm:'ترسیم',items:[['line','╱','خط'],['pl','⌇','پلی‌لاین'],['arc','◠','کمان']]},
+ {id:'ins',ic:'Aa',nm:'درج',items:[['coord','＋','مختصات / شناسه'],['text','Aa','متن آزاد'],['@ts','🔤','استایل متن']]},
+ {id:'sel',ic:'⛶',nm:'انتخاب',t:'sel'}];
+const TN={};GROUPS.forEach(G=>{if(G.t)TN[G.t]=G.nm;(G.items||[]).forEach(i=>{if(i[0][0]!=='@')TN[i[0]]=i[2]})});
+let openG=null;
+function buildTools(){const T=$('tools');T.innerHTML='';
+  GROUPS.forEach(G=>{const b=document.createElement('button');
+    const act=G.t?tool===G.t:(G.items||[]).some(i=>i[0]===tool);
+    b.className=(act?'on ':'')+(openG===G.id?'open':'');
+    b.innerHTML=`<i>${G.ic}${G.items?'<sup>▾</sup>':''}</i>${act&&!G.t?TN[tool]:G.nm}`;
+    b.onclick=()=>{if(G.t){setTool(G.t);return}openG=(openG===G.id)?null:G.id;buildTools();buildSub()};T.appendChild(b)})}
+function buildSub(){const B=$('sub');if(!openG){B.style.display='none';return}
+  const G=GROUPS.find(x=>x.id===openG);B.style.display='flex';B.innerHTML='';
+  G.items.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=(t===tool?'on':'');b.innerHTML=`<i>${ic}</i>${nm}`;
+    b.onclick=()=>{openG=null;if(t==='@ds')openDS();else if(t==='@ts')openTS();else setTool(t);buildTools();buildSub()};B.appendChild(b)})}
+function setTool(t){tool=t;pts=[];tent=null;sel=null;selSet=[];dimArc=null;box=null;hover=null;openG=null;buildTools();buildSub();renderPanel();req()}
+function syncChips(){document.querySelectorAll('#chips button').forEach(b=>b.classList.toggle('on',!!S[b.dataset.c]))}
+document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.c;S[k]=!S[k];syncChips();saveCfg();req()}));
+
+/* ---- نمایش روی صفحه (پنجره، انتخاب، پیش‌نمایش دایمنشن) ---- */
+function overlayExtra(live,pts,tent){
+  if(tool==='sel'){
+    if(selSet.length){g.save();g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();
+      for(const o of selSet){if(o.del)continue;
+        if(o.s!==undefined){const [a,b]=w2s(o.x,o.y);g.rect(a-6,b-6,12,12);continue}
+        const P=o.pts;if(P.length===2){const [a,b]=w2s(P[0],P[1]);g.moveTo(a+7,b);g.arc(a,b,7,0,7);continue}
+        let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(o.closed)g.closePath()}
+      g.stroke();g.restore()}
+    if(box){const x=Math.min(box.x0,box.x1),y=Math.min(box.y0,box.y1),w=Math.abs(box.x1-box.x0),hh=Math.abs(box.y1-box.y0),cr=box.x1<box.x0;
+      g.save();g.fillStyle=cr?'rgba(51,194,127,.18)':'rgba(62,166,255,.18)';g.strokeStyle=cr?'#33c27f':'#3ea6ff';g.lineWidth=1.5;if(cr)g.setLineDash([7,5]);
+      g.fillRect(x,y,w,hh);g.strokeRect(x,y,w,hh);g.restore()}}
+  if(DIMT[tool]){
+    const d=dsCur(),ts=tsOf(d),col=css(d.col),geo=dimGeom(tool,live,dimArc);
+    if(geo){g.save();g.strokeStyle=col;g.lineWidth=1.5;
+      for(const q of geo.polys){const F=q.f;g.beginPath();let [a,b]=w2s(F[0],F[1]);g.moveTo(a,b);for(let i=2;i<F.length;i+=2){[a,b]=w2s(F[i],F[i+1]);g.lineTo(a,b)}if(q.closed)g.closePath();g.stroke()}
+      if(geo.txt){const T=geo.txt,[a,b]=w2s(T.x,T.y);paintText({s:T.s,h:geo.h,rot:T.rot,ah:T.ah,av:T.av,f:ts.font,xs:ts.xs,mine:true},view.s,a,b,col)}
+      g.restore()}
+    g.font='bold 12px sans-serif';g.textAlign='left';
+    pts.forEach((p,i)=>{const [a,b]=w2s(p.x,p.y);g.fillStyle='#ffd23f';g.beginPath();g.arc(a,b,4,0,7);g.fill();g.fillText(String(i+1),a+7,b-7)})}}
+
+/* ---- پنجره‌های استایل ---- */
+function openTS(){
+  const t=TS[tsi];
+  openSheet(`<h3>استایل متن</h3>
+  <div class="fl"><label>استایل</label><select id="tsSel">${TS.map((x,i)=>`<option value="${i}" ${i===tsi?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+  <div class="fl"><label>نام</label><input type="text" id="tsName" value="${esc(t.name)}"></div>
+  <div class="fl"><label>فونت</label><select id="tsFont">${opts(FONTS,t.font)}</select></div>
+  <div class="fl"><label>ارتفاع (۰ = خودکار)</label><input type="number" id="tsH" step="any" value="${t.h}"></div>
+  <div class="fl"><label>ضریب عرض</label><input type="number" id="tsX" step="any" value="${t.xs}"></div>
+  <div id="tsPrev" style="margin:10px 0;padding:10px;border:1px dashed var(--line);border-radius:8px;font-size:24px;text-align:center;font-family:${fontCss(t.font)}">نمونه‌ی متن ۱۲۳٫۴۵ — ایستگاه مبنا</div>
+  <div class="btns"><button id="tsNew">＋ استایل جدید</button><button id="tsDel" ${TS.length<2?'disabled':''}>حذف</button><button class="pri" id="tsOk">بستن</button></div>`);
+  const b=$('sheetBox');
+  b.onchange=b.oninput=e=>{const id=e.target.id,v=e.target.value;
+    if(id==='tsSel'){tsi=+v;openTS();saveCfg();return}
+    if(id==='tsName')t.name=v;else if(id==='tsFont'){t.font=v;$('tsPrev').style.fontFamily=fontCss(v)}
+    else if(id==='tsH')t.h=Math.max(0,parseFloat(v)||0);else if(id==='tsX')t.xs=parseFloat(v)>0?parseFloat(v):1;saveCfg()};
+  $('tsNew').onclick=()=>{TS.push(Object.assign({},t,{name:t.name+' ۲'}));tsi=TS.length-1;saveCfg();openTS()};
+  $('tsDel').onclick=()=>{TS.splice(tsi,1);tsi=0;DSL.forEach(d=>{if(d.ts>=TS.length)d.ts=0});if(CI.ts>=TS.length)CI.ts=0;saveCfg();openTS()};
+  $('tsOk').onclick=()=>{$('sheet').style.display='none';renderPanel();req()}}
+const DF=[['dsName','name','t'],['dsTs','ts','i'],['dsH','h','n'],['dsAr','ar','n'],['dsArrow','arrow','t'],['dsPlace','place','t'],['dsDec','dec','i'],['dsSc','sc','n'],['dsPre','pre','t'],['dsSuf','suf','t'],['dsEg','eg','n'],['dsEo','eo','n'],['dsCol','col','i'],['dsOrd','ordPre','b'],['dsArc','arcSym','b']];
+function openDS(){
+  const d=dsCur();
+  openSheet(`<h3>استایل دایمنشن</h3>
+  <div class="fl"><label>استایل</label><select id="dsSel">${DSL.map((x,i)=>`<option value="${i}" ${i===dsi?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+  <div class="fl"><label>نام</label><input type="text" id="dsName" value="${esc(d.name)}"></div>
+  <div class="fl"><label>استایل متن</label><select id="dsTs">${TS.map((x,i)=>`<option value="${i}" ${i===d.ts?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+  <div class="fl"><label>ارتفاع متن (۰ = از استایل متن)</label><input type="number" id="dsH" step="any" value="${d.h}"></div>
+  <div class="fl"><label>اندازه‌ی پیکان (ضریب)</label><input type="number" id="dsAr" step="any" value="${d.ar}"></div>
+  <div class="fl"><label>نوع سر خط</label><select id="dsArrow">${opts({arrow:'پیکان',tick:'خط مایل (ایتالیایی)'},d.arrow)}</select></div>
+  <div class="fl"><label>جای عدد</label><select id="dsPlace">${opts({above:'بالای خط',center:'وسط خط'},d.place)}</select></div>
+  <div class="fl"><label>رقم اعشار</label><select id="dsDec"><option value="-1" ${d.dec<0?'selected':''}>مثل تنظیمات</option>${[0,1,2,3,4,5,6].map(n=>`<option ${d.dec===n?'selected':''}>${n}</option>`).join('')}</select></div>
+  <div class="fl"><label>ضریب مقیاس عدد</label><input type="number" id="dsSc" step="any" value="${d.sc}"></div>
+  <div class="fl"><label>پیشوند</label><input type="text" id="dsPre" value="${esc(d.pre)}"><label>پسوند</label><input type="text" id="dsSuf" value="${esc(d.suf)}"></div>
+  <div class="fl"><label>فاصله از شیء (ضریب)</label><input type="number" id="dsEg" step="any" value="${d.eg}"></div>
+  <div class="fl"><label>امتداد خط کمکی (ضریب)</label><input type="number" id="dsEo" step="any" value="${d.eo}"></div>
+  <div class="fl"><label>رنگ</label><select id="dsCol">${opts(COLS,d.col)}</select></div>
+  <label class="lr"><input type="checkbox" id="dsOrd" ${d.ordPre?'checked':''}><span class="nm" style="direction:rtl;text-align:right">در اورینت حرف محور (X= یا Y=) هم نوشته شود</span></label>
+  <label class="lr"><input type="checkbox" id="dsArc" ${d.arcSym?'checked':''}><span class="nm" style="direction:rtl;text-align:right">در ارک نشانه‌ی کمان (⌒) نوشته شود</span></label>
+  <div class="btns"><button id="dsNew">＋ استایل جدید</button><button id="dsDel" ${DSL.length<2?'disabled':''}>حذف</button><button class="pri" id="dsOk">بستن</button></div>`);
+  const b=$('sheetBox');
+  b.onchange=b.oninput=e=>{const el=e.target;if(el.id==='dsSel'){dsi=+el.value;saveCfg();openDS();return}
+    const r=DF.find(x=>x[0]===el.id);if(!r)return;
+    d[r[1]]=r[2]==='b'?el.checked:r[2]==='n'?(parseFloat(el.value)||0):r[2]==='i'?parseInt(el.value):el.value;saveCfg();req()};
+  $('dsNew').onclick=()=>{DSL.push(Object.assign({},d,{name:d.name+' ۲'}));dsi=DSL.length-1;saveCfg();openDS()};
+  $('dsDel').onclick=()=>{DSL.splice(dsi,1);dsi=0;saveCfg();openDS()};
+  $('dsOk').onclick=()=>{$('sheet').style.display='none';renderPanel();req()}}
+
+buildTools();syncChips();loadFonts();
 
 /* ---- file ---- */
 function setDB(d,name){DB=d;fileName=name;tool='pan';pts=[];tent=null;log=[];sel=null;hover=null;hist=[];updUndo();
   d.mk=d.layers.find(l=>l.name==='MARKUP')||{name:'MARKUP',color:0xffa500,on:true,count:0};if(!d.layers.includes(d.mk))d.layers.push(d.mk);
-  document.querySelectorAll('#tools button').forEach(x=>x.classList.toggle('on',x.dataset.t==='pan'));
+  selSet=[];dimArc=null;box=null;setTool('pan');
   $('fname').textContent=name;$('empty').style.display='none';renderPanel();resize();zoomExtents();
   const sk=Object.entries(d.skipped);
   if(!d.prims.length&&!d.texts.length)msg('خالی','موجودیت قابل نمایشی پیدا نشد.'+(sk.length?'<br>نوع‌های پشتیبانی‌نشده: <span dir="ltr">'+sk.map(([k,v])=>k+'×'+v).join(', ')+'</span>':''));
