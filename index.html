@@ -84,6 +84,17 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
 @font-face{font-family:'F_mitra';src:url(fonts/mitra.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
 @font-face{font-family:'F_traffic';src:url(fonts/traffic.ttf) format('truetype');font-display:swap;unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200D}
 
+#bSave{position:relative}
+#bSave.dot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff9f1c}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:0 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;padding:6px 12px;font-size:12.5px;border-radius:16px}
+.tabs button.on{background:var(--acc);color:#04101f;border-color:var(--acc);font-weight:700}
+body.slim #tools button{padding:3px 4px;font-size:10px}
+body.slim #tools i{font-size:15px}
+body.slim #panel{padding:4px 8px;max-height:30vh}
+body.slim .grab{margin-top:-4px}
+body.viewmode #bSave.dot::after{display:none}
 </style>
 </head>
 <body>
@@ -91,11 +102,11 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
 <noscript style="color:#fff">جاوااسکریپت خاموش است.</noscript>
 <div id="app">
   <div id="top">
-    <button class="pri" id="bOpen">📂 باز کردن</button>
+    <button class="pri" id="bOpen">📂 باز</button>
     <div id="fname">—</div>
-    <button id="bUndo" title="برگرداندن" disabled>↶</button>
+    <button id="bMode" title="حالت">✏️</button><button id="bUndo" title="برگرداندن" disabled>↶</button>
     <button id="bLayers">لایه‌ها</button>
-    <span id="ver"></span><button id="bSave">💾</button>
+    <span id="ver"></span><button id="bClose" title="بستن نقشه">✕</button><button id="bSave">💾</button>
     <button id="bSet">⚙</button>
   </div>
   <div id="wrap">
@@ -370,10 +381,11 @@ const $=id=>document.getElementById(id);
 const cv=$('cv');let g=cv.getContext('2d');
 let W=0,H=0,dpr=1,DB=null,fileName='—';
 const view={cx:0,cy:0,s:1};
-const APP_VER='1.3.0';
-const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true,ortho:false,lw:false,font:'naz',ptxt:'normal',minTxt:7,dlm:'auto',dom:'auto',pmin:false,idq:true};
+const APP_VER='1.4.0';
+const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true,ortho:false,lw:false,font:'naz',lat:'sans',ptxt:'normal',minTxt:8,mode:'edit',dlm:'auto',dom:'auto',pmin:false,idq:true};
 const FONTS={naz:'نازنین',nazb:'نازنین پررنگ',titr:'تیتر',lotus:'لوتوس',zar:'زر',yagut:'یاقوت',mitra:'میترا',traffic:'ترافیک',sys:'فونت سیستم'};
-const fontCss=k=>(k==='sys'?'':"'F_"+k+"',")+"Tahoma,'DejaVu Sans',sans-serif";
+const LATS={sans:'بدون سر (ساده)',serif:'سریف (کتابی)',mono:'هم‌عرض',cur:'دست‌نویس'};const LATF={sans:"Tahoma,'DejaVu Sans',Arial,sans-serif",serif:"Georgia,'Times New Roman','DejaVu Serif',serif",mono:"Menlo,Consolas,'Courier New',monospace",cur:"'Snell Roundhand','Comic Sans MS',cursive"};
+const fontCss=k=>(k==='sys'?'':"'F_"+k+"',")+(LATF[S.lat]||LATF.sans)
 const AR=/[؀-ۿﭐ-﷿ﹰ-﻿]/,FAPF=/[ﭐ-﷿ﹰ-﻿]/;
 const rv2=s=>s.split('\n').map(l=>(l.match(/[A-Za-z0-9.,+\-:=%\/]+|[^A-Za-z0-9.,+\-:=%\/]+/g)||[]).map(t=>/^[A-Za-z0-9.,+\-:=%\/]/.test(t)?t:[...t].reverse().join('')).reverse().join('')).join('\n');
 function fixFa(s,mine){if(!AR.test(s))return s;if(FAPF.test(s))s=s.normalize('NFKC');s=s.replace(/ي/g,'ی').replace(/ك/g,'ک');if(S.ptxt==='rev'&&!mine)s=rv2(s);return s}
@@ -384,7 +396,7 @@ let CSL=[{id:'c1',name:'ساده کنار نقطه',tpl:'X={x}\\nY={y}\\nZ={z}',
 let CI={n:1,auto:false};
 const COLS={16753920:'نارنجی',16765503:'زرد',3407769:'سبز',4171519:'آبی',16734815:'قرمز',16777215:'سفید'};
 let selSet=[],box=null,dimArc=null,GID=0,tentT=null,dragT=null,expRect=null;const aux=new Set();
-function saveCfg(){try{localStorage.setItem('mv_cfg2',JSON.stringify({S:{dec:S.dec,snap:S.snap,snapE:S.snapE,snapM:S.snapM,snapC:S.snapC,dark:S.dark,ortho:S.ortho,lw:S.lw,font:S.font,ptxt:S.ptxt,minTxt:S.minTxt,dlm:S.dlm,dom:S.dom,idq:S.idq},TS,tsi,DSL,dsi,CSL,csi,CI}))}catch(_){}}
+function saveCfg(){try{localStorage.setItem('mv_cfg2',JSON.stringify({S:{dec:S.dec,snap:S.snap,snapE:S.snapE,snapM:S.snapM,snapC:S.snapC,dark:S.dark,ortho:S.ortho,lw:S.lw,font:S.font,lat:S.lat,mode:S.mode,ptxt:S.ptxt,minTxt:S.minTxt,dlm:S.dlm,dom:S.dom,idq:S.idq},TS,tsi,DSL,dsi,CSL,csi,CI}))}catch(_){}}
 try{const c=JSON.parse(localStorage.getItem('mv_cfg2')||'null');if(c){Object.assign(S,c.S||{});if(c.TS&&c.TS.length)TS=c.TS;if(c.DSL&&c.DSL.length)DSL=c.DSL;if(c.CSL&&c.CSL.length)CSL=c.CSL;tsi=c.tsi|0;dsi=c.dsi|0;csi=c.csi|0;Object.assign(CI,c.CI||{})}}catch(_){}
 if(!TS[tsi])tsi=0;if(!DSL[dsi])dsi=0;if(!CSL[csi])csi=0;
 let tool='pan',pts=[],tent=null,log=[],sel=null,hover=null,prec=null,holdT=null,hist=[],selSeg=0,pickSeg=0;
@@ -416,20 +428,14 @@ function drawScene(view,W,H){
     g.strokeStyle=dispCol(bk.col);g.lineWidth=S.lw?1+(bk.lc|0)*0.9:1;g.beginPath();
     for(const p of bk.list){
       if(!p.L.on||p.del)continue;const b=p.bb;if(b[2]<x0||b[0]>x1||b[3]<y0||b[1]>y1)continue;
-      const P=p.pts,n=P.length;
+      let P=p.pts;if(p.info.xl){P=xlClip(p,x0,y0,x1,y1);if(!P)continue}const n=P.length;
       if(n===2){const sx=(P[0]-view.cx)*s+W/2,sy=H/2-(P[1]-view.cy)*s;g.moveTo(sx-3,sy);g.lineTo(sx+3,sy);g.moveTo(sx,sy-3);g.lineTo(sx,sy+3);continue}
       if((b[2]-b[0])*s<0.6&&(b[3]-b[1])*s<0.6)continue;
       g.moveTo((P[0]-view.cx)*s+W/2,H/2-(P[1]-view.cy)*s);
       for(let i=2;i<n;i+=2)g.lineTo((P[i]-view.cx)*s+W/2,H/2-(P[i+1]-view.cy)*s);
       if(p.closed)g.closePath();}
     g.stroke();}
-  // texts
-  g.textBaseline='alphabetic';const occ=new Set();
-  for(const t of DB.texts){
-    if(!t.L.on||t.del)continue;let px=t.h*s,ss=s,enl=false;
-    if(px<(S.minTxt>0?S.minTxt:3.5)){if(S.minTxt>0){ss=S.minTxt/t.h;px=S.minTxt;enl=true}else continue}
-    const mg=px/s*40;if(t.x<x0-mg||t.x>x1+mg||t.y<y0-mg||t.y>y1+mg)continue;
-    const [sx,sy]=w2s(t.x,t.y);if(enl){const k=Math.round(sx/(px*5))+','+Math.round(sy/(px*1.5));if(occ.has(k))continue;occ.add(k)}paintText(t,ss,sx,sy,dispCol(t.col));}
+  drawTexts(s,x0,y0,x1,y1,w2s);
   if(sel&&sel.s!==undefined){const [a,b]=w2s(sel.x,sel.y);g.strokeStyle='#ffd23f';g.lineWidth=3;g.strokeRect(a-10,b-10,20,20);g.lineWidth=1}
   else if(sel){g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();const P=sel.pts;
     if(P.length===2){const [a,b]=w2s(P[0],P[1]);g.arc(a,b,8,0,7)}else{let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(sel.closed)g.closePath()}
@@ -502,8 +508,13 @@ function snapAt(px,py){
   if(best>=0)return {x:DB.sx[best],y:DB.sy[best],z:DB.sz[best],t:DB.st[best]};
   return {x:wx,y:wy,z:0,t:null};}
 function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-ax-t*dx,py-ay-t*dy)}
+function txtDiag(t){const s=t.s,hx=[...s.slice(0,16)].map(c=>c.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0')).join(' ');
+  let h=row('کد نویسه‌ها',`<span style="font-family:monospace;direction:ltr;display:inline-block;font-size:11px">${hx}</span>`)+row('فونت',esc(String(t.f||S.font)));
+  if([...s].every(c=>c.charCodeAt(0)<256)){const u=Uint8Array.from([...s].map(c=>c.charCodeAt(0)));
+    for(const [nm,enc] of [['خوانش ۱ (عربی ویندوز)','windows-1256'],['خوانش ۲ (UTF-8)','utf-8'],['خوانش ۳ (لاتین)','iso-8859-1']]){try{h+=row(nm,esc(new TextDecoder(enc).decode(u).slice(0,40)))}catch(_){}}}
+  return h}
 function pickEntity(px,py){
-  const [wx,wy]=s2w(px,py),tol=16/view.s;let best=null,bd=tol,bs=0;
+  const [wx,wy]=s2w(px,py),tol=22/view.s;let best=null,bd=tol,bs=0;
   for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;if(wx<b[0]-tol||wx>b[2]+tol||wy<b[1]-tol||wy>b[3]+tol)continue;
     const P=p.pts,n=P.length;
     if(n===2){const d=Math.hypot(P[0]-wx,P[1]-wy);if(d<bd){bd=d;best=p;bs=0}continue}
@@ -515,7 +526,7 @@ function pickEntity(px,py){
 /* ---- gestures ---- */
 const ptrs=new Map();let moved=false,pinch=null;
 const pos=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
-const MEAS={id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,text:1,coord:1,dal:1,dli:1,darc:1,dord:1};
+const MEAS={circ:1,xl:1,mov:1,cpy:1,id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,text:1,coord:1,dal:1,dli:1,darc:1,dord:1};
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 /* --- ذره‌بین دقیق: نگه‌داشتن انگشت (یا گرفتن یک نقطه‌ی ثبت‌شده) → ذره‌بین؛ رها کردن → ثبت خودکار --- */
 function cancelHold(){if(holdT){clearTimeout(holdT);holdT=null}}
@@ -574,7 +585,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e),wp=s2w(p.x,p.y
 function zoomBy(k){view.s=Math.max(1e-9,Math.min(1e9,view.s*k));req()}
 function zoomExtents(){
   if(!DB)return;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300,any=false;
-  for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3]);any=true}
+  for(const p of DB.prims){if(!p.L.on||p.del||p.info.xl)continue;const b=p.bb;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3]);any=true}
   for(const t of DB.texts){if(!t.L.on||t.del)continue;x0=Math.min(x0,t.x);y0=Math.min(y0,t.y);x1=Math.max(x1,t.x);y1=Math.max(y1,t.y);any=true}
   if(!any)return;const w=x1-x0,h=y1-y0;
   view.s=(w<1e-9&&h<1e-9)?1:Math.min(W/Math.max(w,1e-9),H/Math.max(h,1e-9))*0.92;
@@ -623,7 +634,7 @@ function renderPanel(){
   else if(tool==='prop'){
     const C=(sel&&sel.s===undefined)?arcOf(sel):null;
     if(!sel)h+='<div class="hint">روی یک خط، پلی‌لاین، دایره، کمان یا متن ضربه بزنید</div>';
-    else if(sel.s!==undefined){h+=row('نوع','متن')+row('لایه',esc(sel.L.name))+row('متن',esc(sel.s.split('\n').join(' ⏎ ')))+row('X',f(sel.x))+row('Y',f(sel.y))+row('ارتفاع متن',f(sel.h))}
+    else if(sel.s!==undefined){h+=row('نوع','متن')+row('لایه',esc(sel.L.name))+row('متن',esc(sel.s.split('\n').join(' ⏎ ')))+txtDiag(sel)+row('X',f(sel.x))+row('Y',f(sel.y))+row('ارتفاع متن',f(sel.h))}
     else{const i=entInfo(sel);h+=row('نوع',sel.info.type)+row('لایه',esc(sel.L.name));
       if(C)h+=row('مرکز X',f(C.cx))+row('مرکز Y',f(C.cy))+(C.z!==undefined?row('مرکز Z',f(C.z)):'')+row('شعاع',f(C.r),'big')+row('طول کمان',f(C.len))+row('زاویه‌ی کمان',dmsStr(Math.abs(C.sw)*180/Math.PI))+(C.chord?row('وتر',f(C.chord)):'');
       h+=row('طول '+(sel.info.type==='POINT'?'':'(محیط اگر بسته)'),f(i.len),'big');
@@ -644,6 +655,8 @@ function renderPanel(){
     h+=btns([['confirm','✓ ثبت نقطه',!tent,1]].concat(tool==='pl'?[['finish','پایان',pts.length<2],['finishc','بستن',pts.length<3]]:[]).concat([['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]]));}
   else if(DIMT[tool]){h+=dimPanel(live,pts,tent)}
   else if(tool==='coord'){h+=coordPanel(tent)}
+  else if(tool==='circ'||tool==='xl'){h+=cxPanel()}
+  else if(EDT[tool]||tool==='mov'||tool==='cpy'){h+=edPanel()}
   else if(tool==='sel'){h+=selPanel()}
   else if(tool==='exp'){h+=expPanel()}
   else if(tool==='text'){
@@ -654,7 +667,7 @@ function renderPanel(){
     h+=`<div class="fl"><label>استایل</label><select id="tTs">${TS.map((x,i)=>`<option value="${i}" ${i===tsi?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`;
     h+=`<div class="fl"><input type="text" id="tT" placeholder="متن دلخواه" value="${esc(S.tt||'')}"></div>`;
     h+=btns([['ttxt','درج متن',!tent,1],['tstyle','🔤 استایل متن'],['clear','لغو',!tent]]);}
-  P.innerHTML='<div class="grab"></div>'+h;P.classList.toggle('min',!!S.pmin);}
+  P.innerHTML='<div class="grab"></div>'+h.replace(/class="hint"/g,'class="hint keep"');P.classList.toggle('min',!!S.pmin);}
 function copyText(){
   const live=tent?pts.concat([tent]):pts.slice();let t='';
   if(tool==='id'){const L=log.length?log:(tent?[tent]:[]);t=L.map((p,i)=>`${i+1}\t${f(p.x)}\t${f(p.y)}\t${f(p.z)}`).join('\n')}
@@ -670,10 +683,11 @@ function onTap(x,y){
   if(!DB||tool==='pan'||tool==='exp')return;
   if(tool==='sel'){const o=pickEntity(x,y);
     if(!o)selSet=[];else{const L=expandAnn([o]);selSet=selSet.includes(o)?selSet.filter(q=>!L.includes(q)):selSet.concat(L.filter(q=>!selSet.includes(q)))}}
+  else if(EDT[tool]){edTap(x,y);return}
   else if(tool==='prop'){sel=pickEntity(x,y);selSeg=pickSeg}
   else if(tool==='darc'&&!dimArc){const o=pickEntity(x,y);selSeg=pickSeg;const C=(o&&o.s===undefined)?arcOf(o):null;
     if(C){sel=o;dimArc=C}else flash('این شیء کمان یا دایره نیست')}
-  else{tent=snapAt(x,y);tentT=null;hover=null;if(tool==='coord'){if(CI.auto)insertCoord();else S.pmin=true}}
+  else{tent=snapAt(x,y);tentT=null;hover=null;if(tool==='coord'){if(CI.auto)insertCoord();else S.pmin=true}viewAuto()}
   renderPanel();req()}
 $('panel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
   if(a==='confirm'&&tent){if(tool==='angle'&&pts.length>=3)pts=[];pts.push(tent);tent=null;autoDraw()}
@@ -694,6 +708,7 @@ $('panel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
   else if(a&&a.startsWith('om:')){S.dom=a.slice(3);saveCfg()}
   else if(a==='eJpg'){doExport('jpg');return}else if(a==='ePng'){doExport('png');return}else if(a==='ePdf'){doExport('pdf');return}
   else if(a==='eAll'){expRect=extentsRect()}
+  else if(a&&a.startsWith('ed:')){edAct(a.slice(3))}
   else if(a==='ctr'&&sel){showCenter();return}
   else if(a==='copy')copyText();
   renderPanel();req()});
@@ -732,8 +747,8 @@ function arcOf(p){
         if(A)return {cx:A.cx,cy:A.cy,r:A.r,len:A.len,sw:A.sw,a0:Math.atan2(a.y-A.cy,a.x-A.cx),chord:Math.hypot(c.x-a.x,c.y-a.y)}}}}
   return null}
 function updUndo(){const b=$('bUndo');if(b)b.disabled=!hist.length}
-function addUserPrim(flat,closed,type,info,snaps,col,lc){
-  const L=DB.mk;col=col||0xffa500;lc=lc===undefined?1:lc;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
+function addUserPrim(flat,closed,type,info,snaps,col,lc,Lyr){
+  const L=Lyr||DB.mk;col=col||0xffa500;lc=lc===undefined?1:lc;let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
   for(let i=0;i<flat.length;i+=2){x0=Math.min(x0,flat[i]);x1=Math.max(x1,flat[i]);y0=Math.min(y0,flat[i+1]);y1=Math.max(y1,flat[i+1])}
   info.type=type;info.mine=true;const pr={pts:flat,closed,L,col,lc,bb:[x0,y0,x1,y1],info,_sn:snaps};
   DB.prims.push(pr);let bk=DB.buckets.find(b=>b.col===col&&(b.lc|0)===lc);if(!bk){bk={col,lc,list:[]};DB.buckets.push(bk)}bk.list.push(pr);L.count++;
@@ -744,6 +759,7 @@ function addUserText(x,y,z,h,s,o){o=o||{};
   DB.texts.push(tx);L.count++;DB.sx.push(x);DB.sy.push(y);DB.sz.push(z||0);DB.st.push('i');DB.sl.push(L);DB.so.push(tx);return tx}
 function autoDraw(){
   if(DIMT[tool]){dimAuto();return}
+  if(tool==='circ'||tool==='xl'||tool==='mov'||tool==='cpy'){cxAuto();return}
   if(tool==='line'&&pts.length>=2){
     const a=pts[0],b=pts[1],za=a.z||0,zb=b.z||0;
     const pr=addUserPrim([a.x,a.y,b.x,b.y],false,'LINE',{z:[za,zb]},[[a.x,a.y,za,'e'],[b.x,b.y,zb,'e'],[(a.x+b.x)/2,(a.y+b.y)/2,(za+zb)/2,'m']]);
@@ -783,6 +799,7 @@ function buildDXF(only){
     const hd=t=>{w(0,t);w(8,ln);w(62,col)};
     if(I.type==='POINT'){hd('POINT');w(10,num(P[0]));w(20,num(P[1]));w(30,num(I.z&&I.z[0]))}
     else if(I.type==='LINE'){hd('LINE');w(10,num(P[0]));w(20,num(P[1]));w(30,num(I.z&&I.z[0]));w(11,num(P[2]));w(21,num(P[3]));w(31,num(I.z&&I.z[1]))}
+    else if(I.xl){hd('XLINE');w(10,num(I.xl.x));w(20,num(I.xl.y));w(30,num(I.z&&I.z[0]));w(11,num(I.xl.dx));w(21,num(I.xl.dy));w(31,0)}
     else if(X&&X.t==='C'){hd('CIRCLE');w(10,num(X.c[0]));w(20,num(X.c[1]));w(30,num(X.c[2]));w(40,num(X.r))}
     else if(X&&X.t==='A'){hd('ARC');w(10,num(X.c[0]));w(20,num(X.c[1]));w(30,num(X.c[2]));w(40,num(X.r));w(50,num(X.a0));w(51,num(X.a1))}
     else if(P.length>=4){hd('POLYLINE');w(66,1);w(10,0);w(20,0);w(30,0);w(70,p.closed?1:0);
@@ -837,6 +854,7 @@ $('bSet').onclick=()=>{
   <label class="lr"><input type="checkbox" id="sC" ${S.snapC?'checked':''}><span class="nm" style="direction:rtl;text-align:right">اسنپ به مرکز دایره/کمان</span></label>
   <label class="lr"><input type="checkbox" id="sD" ${S.dark?'checked':''}><span class="nm" style="direction:rtl;text-align:right">پس‌زمینه‌ی تیره</span></label>
   <div class="lr"><span class="nm" style="text-align:right;direction:rtl">فونت متن‌های نقشه</span><select id="sFont">${opts(FONTS,S.font)}</select></div>
+  <div class="lr"><span class="nm" style="text-align:right;direction:rtl">فونت حروف لاتین و اعداد انگلیسی</span><select id="sLat">${opts(LATS,S.lat)}</select></div>
   <div class="lr"><span class="nm" style="text-align:right;direction:rtl">ترتیب حروف فارسی</span><select id="sPtx">${opts({normal:'عادی',rev:'وارونه (اگر متن برعکس دیده می‌شود)'},S.ptxt)}</select></div>
   <div class="lr"><span class="nm" style="text-align:right;direction:rtl">حداقل اندازه‌ی متن روی صفحه</span><select id="sMin">${opts({0:'خاموش',5:'۵ پیکسل',7:'۷ پیکسل',9:'۹ پیکسل',12:'۱۲ پیکسل'},S.minTxt)}</select></div>
   <div class="btns"><button id="sDS">🎨 استایل دایمنشن</button><button id="sTS">🔤 استایل متن</button><button id="sCS">🧭 سبک مختصات</button></div>
@@ -844,7 +862,7 @@ $('bSet').onclick=()=>{
   <div class="sn">خروجی، فایل DXF متنی است و در اتوکد باز می‌شود. اگر گوشی پنجره‌ی اشتراک‌گذاری باز کرد، «ذخیره در فایل‌ها» را بزنید.</div>
   <h3 style="margin-top:14px">گزارش فایل</h3>${reportHTML()}
   <div class="ver">نسخه‌ی ${APP_VER}<br>تازه‌ها: برچسب مختصات با خط راهنما؛ ذخیره و ادامه‌ی کار؛ خروجی عکس و PDF؛ اعمال سبک روی نوشته‌های قبلی؛ به‌روزرسانی خودکار</div>`);
-  const b=$('sheetBox');b.onchange=()=>{S.dec=+$('sDec').value;S.snap=$('sSnap').checked;S.snapE=$('sE').checked;S.snapM=$('sM').checked;S.snapC=$('sC').checked;S.dark=$('sD').checked;S.font=$('sFont').value;S.ptxt=$('sPtx').value;S.minTxt=+$('sMin').value;syncChips();saveCfg();renderPanel();req()};
+  const b=$('sheetBox');b.onchange=()=>{S.dec=+$('sDec').value;S.snap=$('sSnap').checked;S.snapE=$('sE').checked;S.snapM=$('sM').checked;S.snapC=$('sC').checked;S.dark=$('sD').checked;S.font=$('sFont').value;S.lat=$('sLat').value;S.ptxt=$('sPtx').value;S.minTxt=+$('sMin').value;syncChips();saveCfg();renderPanel();req()};
   const ex=only=>{if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');const base=(fileName||'map').replace(/\.[^.]+$/,'');saveText(base+(only?'-markup':'-edit')+'.dxf',buildDXF(only))};
   if($('xMine'))$('xMine').onclick=()=>ex(true);
   if($('xAll'))$('xAll').onclick=()=>ex(false);
@@ -859,15 +877,16 @@ const byId=(L,id)=>L.find(x=>x.id===id)||L[0];
 const tsById=id=>byId(TS,id),dsById=id=>byId(DSL,id),csById=id=>byId(CSL,id);
 const dsCur=()=>DSL[dsi]||DSL[0],csCur=()=>CSL[csi]||CSL[0],tsCur=()=>TS[tsi]||TS[0];
 const uid=()=>'s'+Math.random().toString(36).slice(2,8);
-const NEWS=['به‌روزرسانی خودکار همراه با اعلان تازه‌ها','برچسب مختصات با خط راهنمای منحنی، قابل کشیدن و تنظیم اندازه‌ی پیکان','ذخیره و ذخیره‌به‌عنوان؛ ادامه‌ی کار بعد از بستن برنامه','خروجی عکس یا PDF از بخشی از نقشه','تغییر سبک، فونت و اندازه روی نوشته‌های قبلی هم اعمال می‌شود','دایمنشن: مقدار بعد از نقطه‌ی دوم نشان داده می‌شود','انگشت دوم هنگام ذره‌بین: روشن و خاموش کردن اسنپ','متن‌های ریز بدون بزرگ‌نمایی هم دیده می‌شوند','پنجره‌ی پایین قابل جمع‌شدن و کشیدن به بالا','اصلاح نمایش متن‌های فارسی'];
+const NEWS=['به‌روزرسانی خودکار همراه با اعلان تازه‌ها','برچسب مختصات با خط راهنمای منحنی، قابل کشیدن و تنظیم اندازه‌ی پیکان','ذخیره و ذخیره‌به‌عنوان؛ ادامه‌ی کار بعد از بستن برنامه','خروجی عکس یا PDF از بخشی از نقشه','تغییر سبک، فونت و اندازه روی نوشته‌های قبلی هم اعمال می‌شود','دایمنشن: مقدار بعد از نقطه‌ی دوم نشان داده می‌شود','انگشت دوم هنگام ذره‌بین: روشن و خاموش کردن اسنپ','متن‌های ریز بدون بزرگ‌نمایی هم دیده می‌شوند','پنجره‌ی پایین قابل جمع‌شدن و کشیدن به بالا','اصلاح نمایش متن‌های فارسی','نسخه‌ی ۱٫۳٫۱: انتخاب با ضربه‌ی تکی مطمئن‌تر شد، برچسب مختصات را می‌توان از هر جا کشید و فونت روی حروف لاتین هم اثر می‌گذارد','نسخه‌ی ۱٫۴: دایره و خط بی‌نهایت','ابزارهای ویرایش: پاک‌کن، تریم، اکستند، بریک، فیلت، چمفر، آفست، منفجر، جابجایی و کپی','دو حالت: خواندنی (فقط نمایش و اندازه‌گیری) و ویرایش','دکمه‌ی بستن نقشه با پرسش ذخیره؛ دیگر ذخیره‌ی خودکار انجام نمی‌شود','متن‌های کوچک خواناتر و بدون پرش','تنظیمات بخش‌بندی شد','پنل پایین هنگام ترسیم و ویرایش جمع می‌شود'];
 
 /* ---- متن ---- */
-function paintText(t,s,sx,sy,col){
+function paintText(t,s,sx,sy,col,halo){
   const px=t.h*s;g.save();g.translate(sx,sy);g.rotate(-t.rot);if(t.xs&&t.xs!==1)g.scale(t.xs,1);
   g.fillStyle=col;g.font=(t.b?'bold ':'')+px+'px '+fontCss(t.f||S.font);g.textAlign=t.ah;g.textBaseline=t.av;
   let str;if(t._k===S.ptxt&&t._fs!==undefined)str=t._fs;else{str=fixFa(t.s,t.mine);t._fs=str;t._k=S.ptxt}
   const lines=str.split('\n'),lh=px*1.35,n=lines.length;let off=0;
   if(t.av==='middle')off=-(n-1)*lh/2;else if(t.av==='bottom')off=-(n-1)*lh;
+  if(halo){g.lineJoin='round';g.lineWidth=Math.max(2,px*0.28);g.strokeStyle=S.dark?'#0b0d10':'#ffffff';for(let i=0;i<n;i++)g.strokeText(lines[i],0,off+i*lh)}
   for(let i=0;i<n;i++)g.fillText(lines[i],0,off+i*lh);
   g.restore()}
 function loadFonts(){if(!document.fonts)return;Object.keys(FONTS).forEach(k=>{if(k!=='sys')document.fonts.load('16px F_'+k,'ابپ 123').then(()=>req()).catch(()=>{})})}
@@ -875,7 +894,7 @@ function loadFonts(){if(!document.fonts)return;Object.keys(FONTS).forEach(k=>{if
 /* ---- عمود ---- */
 function orthoRef(){
   if(!S.ortho||(prec&&prec.drag&&prec.drag.k!=='tent'))return null;
-  if((tool==='dist'||tool==='area'||tool==='line'||tool==='pl')&&pts.length)return pts[pts.length-1];
+  if((tool==='dist'||tool==='area'||tool==='line'||tool==='pl'||tool==='xl'||tool==='mov'||tool==='cpy')&&pts.length)return pts[pts.length-1];
   if((tool==='dal'||tool==='dli')&&pts.length===1)return pts[0];
   return null}
 
@@ -899,6 +918,7 @@ function pushHist(kind,items,extra){hist.push(Object.assign({kind,items},extra||
 function undo(){const h=hist.pop();if(!h)return;
   if(h.kind==='add')h.items.forEach(o=>setDel(o,true));else if(h.kind==='del')h.items.forEach(o=>setDel(o,false));
   else if(h.kind==='mv'){h.a.tp=h.from;regen(h.a)}
+  else if(h.kind==='edit'){h.adds.forEach(o=>setDel(o,true));h.dels.forEach(o=>setDel(o,false))}
   updUndo();sel=null;selSet=[];renderPanel();req();flash('برگردانده شد');dirty()}
 function expandAnn(list){const out=new Set(list);for(const o of list)if(o.ann)for(const x of o.ann.objs)out.add(x);return [...out]}
 
@@ -918,10 +938,10 @@ function boxPick(xa,ya,xb,yb,cross){
     if(hit)out.push(p)}
   for(const t of DB.texts){if(!t.L.on||t.del)continue;if(t.x>=x0&&t.x<=x1&&t.y>=y0&&t.y<=y1)out.push(t)}
   return out}
-function applyBox(){const b=box;if(!b)return;const tiny=Math.abs(b.x1-b.x0)<6||Math.abs(b.y1-b.y0)<6;
+function applyBox(){const b=box;if(!b)return;const tiny=Math.hypot(b.x1-b.x0,b.y1-b.y0)<16||Math.abs(b.x1-b.x0)<6||Math.abs(b.y1-b.y0)<6;
   const [a0,b0]=s2w(b.x0,b.y0),[a1,b1]=s2w(b.x1,b.y1);
   if(tool==='exp'){if(!tiny)expRect={x0:Math.min(a0,a1),y0:Math.min(b0,b1),x1:Math.max(a0,a1),y1:Math.max(b0,b1)};renderPanel();req();return}
-  if(tiny){selSet=[];renderPanel();req();return}
+  if(tiny){box=null;onTap((b.x0+b.x1)/2,(b.y0+b.y1)/2);return}
   selSet=expandAnn(boxPick(a0,b0,a1,b1,b.x1<b.x0));renderPanel();req()}
 function allVisible(){return expandAnn(DB.prims.filter(p=>p.L.on&&!p.del).concat(DB.texts.filter(t=>t.L.on&&!t.del)))}
 function delSet(){const items=new Set();for(const o of expandAnn(selSet)){if(o.del)continue;items.add(o.ann||o)}
@@ -933,7 +953,7 @@ function selPanel(){let h='';
     for(const o of selSet)if(o.s===undefined&&!o.ann)len+=entInfo(o).len;
     h+=row('تعداد انتخاب',items.size,'big')+row('جمع طول',f(len))+`<div class="sn" dir="ltr">${Object.entries(c).map(([k,v])=>k+'×'+v).join(' , ')}</div>`;
     if(selSet.some(o=>o.ann&&o.ann.kind==='coord'&&o.ann.tp))h+='<div class="hint">برای جابه‌جایی متن مختصات، دایره‌ی زردِ کنار متن را بکشید.</div>'}
-  return h+btns([['delset','🗑 حذف انتخاب‌شده‌ها',!selSet.length,1],['selall','انتخاب همه'],['clear','لغو انتخاب',!selSet.length]])}
+  return h+btns([['delset','🗑 حذف انتخاب‌شده‌ها',!selSet.length,1],['selall','انتخاب همه'],['clear','لغو انتخاب',!selSet.length]].concat(S.mode==='view'?[]:[['ed:mvgo','✥ جابجایی',!selSet.length],['ed:cpgo','⧉ کپی',!selSet.length]]))}
 
 /* ---- دایمنشن ---- */
 const ROT=r=>{while(r>Math.PI/2+1e-9)r-=Math.PI;while(r<=-Math.PI/2+1e-9)r+=Math.PI;return r};
@@ -1058,7 +1078,7 @@ function coordPanel(tent){
   return h+btns([['ins','＋ درج',!tent,1],['cstyle','🧭 تنظیم سبک'],['cnreset','شماره از اول'],['clear','لغو',!tent]])}
 function textGrab(p){
   if(tool==='coord'&&tent&&csCur().leader!=='none'){const T=tentT||defTp(tent,tsById(csCur().ts).h||autoH());const [a,b]=w2s(T.x,T.y);if(Math.hypot(a-p.x,b-p.y)<44)return {k:'prev'}}
-  if(tool==='sel'){const seen=new Set();for(const o of selSet){const A=o.ann;if(A&&A.kind==='coord'&&A.tp&&!seen.has(A)){seen.add(A);const [a,b]=w2s(A.tp.x,A.tp.y);if(Math.hypot(a-p.x,b-p.y)<44)return {k:'ann',a:A}}}}
+  if(tool==='sel'){for(const A of DB.anns){if(A.kind==='coord'&&A.tp&&!A.del){const [a,b]=w2s(A.tp.x,A.tp.y);if(Math.hypot(a-p.x,b-p.y)<40)return {k:'ann',a:A}}}}
   return null}
 function startDrag(dg){dragT=dg;if(dg.k==='ann'){dg.from={x:dg.a.tp.x,y:dg.a.tp.y};dg.a.objs.forEach(o=>o.del=true)}req()}
 function moveDrag(p){const [wx,wy]=s2w(p.x,p.y);if(dragT.k==='prev')tentT={x:wx,y:wy};else dragT.a.tp={x:wx,y:wy};req()}
@@ -1072,22 +1092,25 @@ const GROUPS=[
  {id:'pan',ic:'✋',nm:'حرکت',t:'pan'},
  {id:'meas',ic:'📏',nm:'اندازه',items:[['id','📍','مختصات'],['dist','📏','فاصله'],['area','⬚','مساحت'],['angle','∠','زاویه'],['prop','ℹ️','ویژگی']]},
  {id:'dim',ic:'📐',nm:'دایمنشن',items:[['dal','↗','مایل'],['dli','↔','مستقیم'],['darc','⌒','ارک'],['dord','⊢','اورینت'],['@ds','🎨','استایل دایمنشن']]},
- {id:'draw',ic:'✏️',nm:'ترسیم',items:[['line','╱','خط'],['pl','⌇','پلی‌لاین'],['arc','◠','کمان']]},
+ {id:'draw',ic:'✏️',nm:'ترسیم',items:[['line','╱','خط'],['pl','⌇','پلی‌لاین'],['arc','◠','کمان'],['circ','◯','دایره'],['xl','⟷','خط بی‌نهایت']]},
+ {id:'edit',ic:'✂️',nm:'ویرایش',items:[['era','🧽','پاک‌کن'],['trm','✂','تریم'],['ext','⇥','اکستند'],['brk','⎯ ⎯','بریک'],['fil','◜','فیلت'],['chm','◢','چمفر'],['off','⫽','آفست'],['xpl','💥','منفجر'],['mov','✥','جابجایی'],['cpy','⧉','کپی']]},
  {id:'ins',ic:'Aa',nm:'درج',items:[['coord','＋','مختصات / شناسه'],['text','Aa','متن آزاد'],['@cs','🧭','سبک مختصات'],['@ts','🔤','استایل متن']]},
  {id:'sel',ic:'⛶',nm:'انتخاب',t:'sel'}];
 const TN={exp:'خروجی'};GROUPS.forEach(G=>{if(G.t)TN[G.t]=G.nm;(G.items||[]).forEach(i=>{if(i[0][0]!=='@')TN[i[0]]=i[2]})});
 let openG=null;
 function buildTools(){const T=$('tools');T.innerHTML='';
+  if(S.mode==='view'){const mg=GROUPS.find(x=>x.id==='meas'),L=[['pan','✋','حرکت']].concat(mg.items);
+    L.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=t===tool?'on':'';b.innerHTML=`<i>${ic}</i>${nm}`;b.onclick=()=>setTool(t);T.appendChild(b)});return}
   GROUPS.forEach(G=>{const b=document.createElement('button');
     const act=G.t?tool===G.t:(G.items||[]).some(i=>i[0]===tool);
     b.className=(act?'on ':'')+(openG===G.id?'open':'');
     b.innerHTML=`<i>${G.ic}${G.items?'<sup>▾</sup>':''}</i>${act&&!G.t?TN[tool]:G.nm}`;
     b.onclick=()=>{if(G.t){setTool(G.t);return}openG=(openG===G.id)?null:G.id;buildTools();buildSub()};T.appendChild(b)})}
-function buildSub(){const B=$('sub');if(!openG){B.style.display='none';return}
+function buildSub(){const B=$('sub');if(S.mode==='view'||!openG){B.style.display='none';return}
   const G=GROUPS.find(x=>x.id===openG);B.style.display='flex';B.innerHTML='';
   G.items.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=(t===tool?'on':'');b.innerHTML=`<i>${ic}</i>${nm}`;
     b.onclick=()=>{openG=null;if(t==='@ds')openDS();else if(t==='@ts')openTS();else if(t==='@cs')openCS();else setTool(t);buildTools();buildSub()};B.appendChild(b)})}
-function setTool(t){tool=t;pts=[];tent=null;tentT=null;sel=null;selSet=[];dimArc=null;box=null;hover=null;openG=null;dragT=null;S.pmin=false;buildTools();buildSub();renderPanel();req()}
+function setTool(t){if(S.mode==='view'&&!VIEW_OK[t])t='pan';const keep=(t==='mov'||t==='cpy');tool=t;pts=[];tent=null;tentT=null;sel=null;if(!keep)selSet=[];dimArc=null;box=null;hover=null;openG=null;dragT=null;edReset();S.pmin=PMIN.has(t);document.body.classList.toggle('slim',PMIN.has(t));buildTools();buildSub();renderPanel();req()}
 function syncChips(){document.querySelectorAll('#chips button').forEach(b=>b.classList.toggle('on',!!S[b.dataset.c]))}
 document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.c;S[k]=!S[k];if(prec)prec.snap=snapAt(prec.x,prec.y);syncChips();saveCfg();req()}));
 
@@ -1106,8 +1129,9 @@ function quickLabel(p,tag){
   g.fillStyle='rgba(10,12,16,.85)';g.fillRect(bx,by,w,hh);g.strokeStyle='#33c27f';g.lineWidth=1;g.strokeRect(bx,by,w,hh);
   g.fillStyle='#e8ecf2';ls.forEach((s,k)=>g.fillText(s,bx+5,by+15+k*15));g.restore()}
 function overlayExtra(live,pts,tent){
+  cxOverlay(live,pts,tent);
   if(tool==='id'&&S.idq){log.forEach((p,i)=>quickLabel(p,String(i+1)));if(tent)quickLabel(tent,'')}
-  if(tool==='sel'){
+  if(tool==='sel'||tool==='mov'||tool==='cpy'){
     if(selSet.length){g.save();g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();
       for(const o of selSet){if(o.del)continue;
         if(o.s!==undefined){const [a,b]=w2s(o.x,o.y);g.rect(a-6,b-6,12,12);continue}
@@ -1225,24 +1249,25 @@ const idb={db:null,open(){return new Promise((res,rej)=>{if(this.db)return res(t
   async get(k){const d=await this.open();return new Promise((res,rej)=>{const r=d.transaction('proj').objectStore('proj').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
   async del(k){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction('proj','readwrite');t.objectStore('proj').delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})},
   async metas(){const d=await this.open();return new Promise((res,rej)=>{const r=d.transaction('proj').objectStore('proj').getAll(IDBKeyRange.bound('m:','m:\uffff'));r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}};
-let saveT=0;function dirty(){if(!DB||!DB.srcText)return;clearTimeout(saveT);saveT=setTimeout(()=>{saveProject(false).catch(()=>{})},2500)}
+let isDirty=false;function dirty(){if(!DB||!DB.srcText)return;isDirty=true;setDirtyUI()}
 function projRec(){
   return {name:fileName,text:DB.srcText,t:Date.now(),
     delP:DB.prims.map((p,i)=>(p.del&&!p.info.mine)?i:-1).filter(i=>i>=0),
     delT:DB.texts.map((t,i)=>(t.del&&!t.mine)?i:-1).filter(i=>i>=0),
     layers:DB.layers.filter(L=>L!==DB.mk).map(L=>[L.name,L.on]),
-    user:DB.prims.filter(p=>p.info.mine&&!p.ann&&!p.del&&!p.dead).map(p=>({f:p.pts,c:p.closed,t:p.info.type,i:p.info,sn:p._sn||[]})),
+    user:DB.prims.filter(p=>p.info.mine&&!p.ann&&!p.del&&!p.dead).map(p=>({f:p.pts,c:p.closed,t:p.info.type,i:p.info,sn:p._sn||[],col:p.col,lc:p.lc,ln:p.L&&p.L.name})),
     anns:JSON.parse(JSON.stringify(DB.anns,(k,v)=>(k==='objs'||k==='isAnn')?undefined:v)),GID,view:{cx:view.cx,cy:view.cy,s:view.s}}}
 async function saveProject(manual){
   if(!DB||!DB.srcText){if(manual)flash('این نمونه ذخیره نمی‌شود');return}
   const rec=projRec();await idb.put('p:'+rec.name,rec);await idb.put('m:'+rec.name,{name:rec.name,t:rec.t,kb:Math.round(rec.text.length/1024)});
-  if(manual)flash('ذخیره شد');refreshSaved()}
-async function loadSaved(name){
-  const rec=await idb.get('p:'+name);if(!rec){flash('فایل ذخیره‌شده پیدا نشد');return}
+  isDirty=false;setDirtyUI();if(manual)flash('ذخیره شد');refreshSaved()}
+async function saveResume(){if(!DB||!DB.srcText)return false;const rec=projRec();await idb.put('r:'+rec.name,rec);try{localStorage.setItem('mv_resume',rec.name)}catch(_){}return true}
+async function loadSaved(name,key){
+  const rec=await idb.get((key||'p:')+name);if(!rec){flash('فایل ذخیره‌شده پیدا نشد');return}
   const D=parseDXF(rec.text);D.srcText=rec.text;setDB(D,rec.name);
   for(const i of rec.delP)if(DB.prims[i])DB.prims[i].del=true;for(const i of rec.delT)if(DB.texts[i])DB.texts[i].del=true;
   for(const [n,on] of rec.layers){const L=DB.layers.find(x=>x.name===n);if(L)L.on=on}
-  for(const u of rec.user){const p=addUserPrim(u.f,u.c,u.t,u.i,u.sn);p._sn=u.sn}
+  for(const u of rec.user){const Ly=u.ln?DB.layers.find(x=>x.name===u.ln):null;const p=addUserPrim(u.f,u.c,u.t,u.i,u.sn,u.col,u.lc,Ly||undefined);p._sn=u.sn}
   for(const r of rec.anns){const a=Object.assign({isAnn:1,objs:[]},r);DB.anns.push(a);matAnn(a)}
   GID=Math.max(GID,rec.GID||0);if(rec.view){Object.assign(view,rec.view)}
   hist=[];updUndo();renderPanel();req()}
@@ -1256,7 +1281,7 @@ async function refreshSaved(){
 function openSave(){
   if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');
   openSheet(`<h3>ذخیره و خروجی</h3>
-  <div class="sn">«ذخیره» کار شما (با همه‌ی ویرایش‌ها) را داخل خود برنامه نگه می‌دارد و بعد از بستن، از صفحه‌ی اول قابل ادامه است. ذخیره‌ی خودکار هم فعال است.</div>
+  <div class="sn">«ذخیره» کار شما (با همه‌ی ویرایش‌ها) را داخل خود برنامه نگه می‌دارد و بعد از بستن، از صفحه‌ی اول قابل ادامه است. ذخیره‌ی خودکار ندارد؛ هنگام بستن نقشه از شما پرسیده می‌شود.</div>
   <div class="btns"><button class="pri" id="svSave">💾 ذخیره</button><button id="svAs">ذخیره به‌عنوان (فایل DXF)</button></div>
   <div class="btns"><button id="svMine">فقط ترسیم‌ها و نوشته‌های من (DXF)</button><button id="svImg">🖼 عکس یا PDF از بخشی از نقشه</button></div>`);
   const base=(fileName||'map').replace(/\.[^.]+$/,'');
@@ -1293,7 +1318,7 @@ async function saveBlob(name,blob){
   catch(e){if(e&&e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
 function extentsRect(){let x0=1e300,y0=1e300,x1=-1e300,y1=-1e300;
-  for(const p of DB.prims){if(!p.L.on||p.del)continue;const b=p.bb;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3])}
+  for(const p of DB.prims){if(!p.L.on||p.del||p.info.xl)continue;const b=p.bb;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3])}
   for(const t of DB.texts){if(!t.L.on||t.del)continue;x0=Math.min(x0,t.x);y0=Math.min(y0,t.y);x1=Math.max(x1,t.x);y1=Math.max(y1,t.y)}
   if(x0>x1)return null;const pad=Math.max(x1-x0,y1-y0,1e-6)*0.02;return {x0:x0-pad,y0:y0-pad,x1:x1+pad,y1:y1+pad}}
 async function doExport(kind){
@@ -1316,13 +1341,361 @@ function showNews(){let last=null;try{last=localStorage.getItem('mv_ver');localS
 function initSW(){
   const had=!!navigator.serviceWorker.controller;let reloading=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!had||reloading)return;reloading=true;
-    if(DB&&DB.srcText){try{localStorage.setItem('mv_resume',fileName)}catch(_){}saveProject(false).catch(()=>{}).then(()=>location.reload())}else location.reload()});
+    if(DB&&DB.srcText){saveResume().catch(()=>{}).then(()=>location.reload())}else location.reload()});
   window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(reg=>{
     reg.addEventListener('updatefound',()=>flash('نسخه‌ی تازه پیدا شد؛ در حال به‌روزرسانی…'));
     const chk=()=>reg.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});setInterval(chk,1800000)}).catch(()=>{})})}
 
+
+/* ================= نسخه‌ی ۱٫۴ ================= */
+const EDT={era:'پاک‌کن',trm:'تریم',ext:'اکستند',brk:'بریک',fil:'فیلت',chm:'چمفر',off:'آفست',xpl:'منفجر'};
+Object.assign(TN,EDT,{circ:'دایره',xl:'خط بی‌نهایت',mov:'جابجایی',cpy:'کپی'});
+const ED={fr:1,d1:1,d2:1,od:1,cr:0};let ed={};
+function edReset(){ed={step:0}}
+function setDirtyUI(){const b=$('bSave');if(b)b.classList.toggle('dot',!!isDirty)}
+
+/* ---- هندسه ---- */
+function segX(ax,ay,bx,by,cx,cy,dx,dy){
+  const r1=bx-ax,r2=by-ay,s1=dx-cx,s2=dy-cy,den=r1*s2-r2*s1;
+  if(Math.abs(den)<1e-13*(Math.hypot(r1,r2)*Math.hypot(s1,s2)+1e-300))return null;
+  const qx=cx-ax,qy=cy-ay;return [(qx*s2-qy*s1)/den,(qx*r2-qy*r1)/den]}
+function pathOf(p){const P=p.pts,V=[];for(let i=0;i<P.length;i+=2)V.push([P[i],P[i+1]]);if(p.closed&&V.length>2)V.push([P[0],P[1]]);return V}
+function pathZ(p){const I=p.info,n=p.pts.length/2,z=[];for(let i=0;i<n;i++)z.push(I.zs?(I.zs[i]||0):I.z?(I.z[i]||0):(I.c?(I.c[2]||0):0));if(p.closed&&n>2)z.push(z[0]);return z}
+function nearU(V,wx,wy){let best=1e300,bu=0;
+  for(let i=0;i<V.length-1;i++){const [ax,ay]=V[i],[bx,by]=V[i+1],dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy;let t=L?((wx-ax)*dx+(wy-ay)*dy)/L:0;t=Math.max(0,Math.min(1,t));
+    const d=Math.hypot(ax+t*dx-wx,ay+t*dy-wy);if(d<best){best=d;bu=i+t}}
+  return bu}
+function boundSegs(excl,bb){
+  const out=[],[x0,y0,x1,y1]=bb;
+  for(const q of DB.prims){if(q===excl||q.del||!q.L.on)continue;const b=q.bb;if(b[2]<x0||b[0]>x1||b[3]<y0||b[1]>y1)continue;
+    const P=q.pts,n=P.length;if(n<4)continue;const m=q.closed?n:n-2;
+    for(let i=0;i<m;i+=2){const j=(i+2)%n;out.push([P[i],P[i+1],P[j],P[j+1]])}}
+  return out}
+function ptAt(V,Z,u,closed){const m=V.length-1;let i=Math.floor(u+1e-12);if(!closed&&i>=m)i=m-1;if(i<0)i=0;const t=u-i,a=V[i%m],b=V[(i%m)+1];
+  const za=Z[i%m],zb=Z[(i%m)+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,za+(zb-za)*t]}
+function subPath(V,Z,ua,ub,closed){
+  const m=V.length-1,out=[ptAt(V,Z,ua,closed)];
+  for(let k=Math.floor(ua+1e-9)+1;k<ub-1e-9;k++){const i=k%m;out.push([V[i][0],V[i][1],Z[i]])}
+  out.push(ptAt(V,Z,ub,closed));return out}
+
+/* ---- ساخت شیء با ویژگی‌های شیء قبلی ---- */
+function mkLike(like,flat,closed,type,info,snaps){return addUserPrim(flat,closed,type,info,snaps,like.col,like.lc,like.L)}
+function mkLine(like,a,b){const za=a[2]||0,zb=b[2]||0;
+  return mkLike(like,[a[0],a[1],b[0],b[1]],false,'LINE',{z:[za,zb]},[[a[0],a[1],za,'e'],[b[0],b[1],zb,'e'],[(a[0]+b[0])/2,(a[1]+b[1])/2,(za+zb)/2,'m']])}
+function mkArc(like,cx,cy,r,a0,sw,z){
+  const n=Math.max(8,Math.ceil(Math.abs(sw)/(Math.PI/90))),flat=[];
+  for(let q=0;q<=n;q++){const t=a0+sw*q/n;flat.push(cx+r*Math.cos(t),cy+r*Math.sin(t))}
+  const mi=Math.floor(n/2)*2,dd=x=>((x*180/Math.PI)%360+360)%360,s0=sw>=0?a0:a0+sw,s1=sw>=0?a0+sw:a0;
+  return mkLike(like,flat,false,'ARC',{r,sw,len:r*Math.abs(sw),c:[cx,cy,z],ex:{t:'A',c:[cx,cy,z],r,a0:dd(s0),a1:dd(s1)}},
+    [[cx,cy,z,'c'],[flat[0],flat[1],z,'e'],[flat[flat.length-2],flat[flat.length-1],z,'e'],[flat[mi],flat[mi+1],z,'m']])}
+function mkCircle(like,cx,cy,r,z){
+  const n=120,flat=[];for(let q=0;q<n;q++){const t=2*Math.PI*q/n;flat.push(cx+r*Math.cos(t),cy+r*Math.sin(t))}
+  return mkLike(like,flat,true,'CIRCLE',{r,area:Math.PI*r*r,len:2*Math.PI*r,c:[cx,cy,z],ex:{t:'C',c:[cx,cy,z],r}},
+    [[cx,cy,z,'c'],[cx+r,cy,z,'e'],[cx-r,cy,z,'e'],[cx,cy+r,z,'e'],[cx,cy-r,z,'e']])}
+function mkPoly(like,pts3,closed){
+  if(!closed&&pts3.length===2)return mkLine(like,pts3[0],pts3[1]);
+  const flat=[],sn=[];for(const q of pts3){flat.push(q[0],q[1]);sn.push([q[0],q[1],q[2]||0,'e'])}
+  return mkLike(like,flat,!!closed,'LWPOLYLINE',{zs:pts3.map(q=>q[2]||0)},sn)}
+/* قطعه‌ای از مسیر یک شیء (با حفظ کمان بودن دایره و کمان) */
+function pieceOf(p,V,Z,ua,ub,closed){
+  const I=p.info;
+  if((I.type==='CIRCLE'||I.type==='ARC')&&I.c&&I.r>0){
+    const a=ptAt(V,Z,ua,closed),b=ptAt(V,Z,ub,closed),a0=Math.atan2(a[1]-I.c[1],a[0]-I.c[0]),a1=Math.atan2(b[1]-I.c[1],b[0]-I.c[0]);
+    const dir=(I.type==='ARC'&&I.sw<0)?-1:1;let sw=a1-a0;
+    if(dir>0){while(sw<=1e-9)sw+=2*Math.PI;while(sw>2*Math.PI+1e-9)sw-=2*Math.PI}else{while(sw>=-1e-9)sw-=2*Math.PI;while(sw<-2*Math.PI-1e-9)sw+=2*Math.PI}
+    return mkArc(p,I.c[0],I.c[1],I.r,a0,sw,I.c[2]||0)}
+  return mkPoly(p,subPath(V,Z,ua,ub,closed),false)}
+function applyEdit(dels,adds,msg){
+  dels.forEach(o=>setDel(o,true));pushHist('edit',[],{dels,adds});sel=null;selSet=[];edReset();flash(msg);renderPanel();req()}
+
+/* ---- تریم ---- */
+function trimPrim(p,wx,wy){
+  const V=pathOf(p),Z=pathZ(p),m=V.length-1;if(m<1)return flash('قابل تریم نیست');
+  const closed=!!p.closed&&V.length>3||(!!p.closed&&p.info.type==='CIRCLE'),B=boundSegs(p,p.bb),ints=[];
+  for(let i=0;i<m;i++){const [ax,ay]=V[i],[bx,by]=V[i+1],lx0=Math.min(ax,bx)-1e-9,lx1=Math.max(ax,bx)+1e-9,ly0=Math.min(ay,by)-1e-9,ly1=Math.max(ay,by)+1e-9;
+    for(const s of B){if(Math.max(s[0],s[2])<lx0||Math.min(s[0],s[2])>lx1||Math.max(s[1],s[3])<ly0||Math.min(s[1],s[3])>ly1)continue;
+      const r=segX(ax,ay,bx,by,s[0],s[1],s[2],s[3]);if(!r)continue;const [t,u]=r;
+      if(t<-1e-9||t>1+1e-9||u<-1e-9||u>1+1e-9)continue;ints.push(i+Math.min(1,Math.max(0,t)))}}
+  ints.sort((a,b)=>a-b);const U=[];for(const u of ints)if(!U.length||u-U[U.length-1]>1e-7)U.push(u);
+  if(closed&&U.length>1&&U[U.length-1]-U[0]>m-1e-7)U.pop();
+  const u0=nearU(V,wx,wy);let lo=null,hi=null;
+  for(const u of U){if(u<u0-1e-9)lo=u;else if(u>u0+1e-9&&hi===null)hi=u}
+  let adds=[];
+  if(closed){
+    if(U.length<2)return flash('برای تریم شیء بسته حداقل دو برخورد لازم است');
+    if(lo===null)lo=U[U.length-1]-m;if(hi===null)hi=U[0]+m;
+    adds=[pieceOf(p,V,Z,hi,lo+m,true)]}
+  else{
+    if(lo===null&&hi===null)return flash('لبه‌ی برش‌دهنده پیدا نشد');
+    if(lo!==null&&lo>1e-7)adds.push(pieceOf(p,V,Z,0,lo,false));
+    if(hi!==null&&hi<m-1e-7)adds.push(pieceOf(p,V,Z,hi,m,false))}
+  applyEdit([p],adds,'تریم شد')}
+
+/* ---- اکستند ---- */
+function extendPrim(p,wx,wy){
+  const I=p.info;if(p.closed||I.type==='CIRCLE'||I.type==='ARC'||I.xl)return flash('اکستند فقط برای خط و پلی‌لاین باز است');
+  const V=pathOf(p),Z=pathZ(p),m=V.length-1,u0=nearU(V,wx,wy),atEnd=u0>m/2;
+  const E=atEnd?V[m]:V[0],Q=atEnd?V[m-1]:V[1];let dx=E[0]-Q[0],dy=E[1]-Q[1];const L=Math.hypot(dx,dy);if(L<1e-12)return flash('قابل اکستند نیست');dx/=L;dy/=L;
+  const B=boundSegs(p,[-1e300,-1e300,1e300,1e300]);let best=1e300;
+  for(const s of B){const r=segX(E[0],E[1],E[0]+dx,E[1]+dy,s[0],s[1],s[2],s[3]);if(!r)continue;const [t,u]=r;
+    if(u<-1e-9||u>1+1e-9||t<1e-7)continue;if(t<best)best=t}
+  if(best>1e299)return flash('مرزی برای اکستند پیدا نشد');
+  const NV=V.map(q=>q.slice()),i=atEnd?m:0;NV[i]=[E[0]+dx*best,E[1]+dy*best];
+  const pts3=NV.map((q,k)=>[q[0],q[1],Z[k]||0]);
+  applyEdit([p],[mkPoly(p,pts3,false)],'اکستند شد')}
+
+/* ---- بریک ---- */
+function breakPrim(p,a,b){
+  const V=pathOf(p),Z=pathZ(p),m=V.length-1,closed=!!p.closed&&V.length>3||(!!p.closed&&p.info.type==='CIRCLE');
+  let ua=nearU(V,a.x,a.y),ub=b?nearU(V,b.x,b.y):ua;if(ua>ub){const t=ua;ua=ub;ub=t}
+  const adds=[];
+  if(closed){if(b&&ub-ua>1e-7)adds.push(pieceOf(p,V,Z,ub,ua+m,true));else adds.push(pieceOf(p,V,Z,ua,ua+m,true))}
+  else{if(ua>1e-7)adds.push(pieceOf(p,V,Z,0,ua,false));if(ub<m-1e-7)adds.push(pieceOf(p,V,Z,ub,m,false))}
+  if(!adds.length)return flash('چیزی باقی نمی‌ماند');
+  applyEdit([p],adds,b?'بریک شد':'در نقطه شکسته شد')}
+
+/* ---- منفجر ---- */
+function explodePrim(p){
+  if(p.pts.length<6||p.info.type==='CIRCLE'||p.info.type==='ARC'||p.info.xl)return flash('این شیء چند پاره‌خطی نیست');
+  const V=pathOf(p),Z=pathZ(p),adds=[];for(let i=0;i<V.length-1;i++)adds.push(mkLine(p,[V[i][0],V[i][1],Z[i]],[V[i+1][0],V[i+1][1],Z[i+1]]));
+  applyEdit([p],adds,'به '+adds.length+' خط تبدیل شد')}
+
+/* ---- فیلت و چمفر ---- */
+const lineOf=p=>(p&&p.s===undefined&&p.pts.length===4&&!p.closed&&!p.info.ex&&!p.info.xl&&!p.ann)?p.pts:null;
+function cornerOf(a,b){
+  const L1=lineOf(a.p),L2=lineOf(b.p);if(!L1||!L2)return {err:'فیلت/چمفر فقط بین دو خط ساده است (چندخطی را ابتدا «منفجر» کنید)'};
+  if(a.p===b.p)return {err:'دو خط متفاوت انتخاب کنید'};
+  const r=segX(L1[0],L1[1],L1[2],L1[3],L2[0],L2[1],L2[2],L2[3]);if(!r)return {err:'دو خط موازی‌اند'};
+  const C=[L1[0]+r[0]*(L1[2]-L1[0]),L1[1]+r[0]*(L1[3]-L1[1])];
+  const side=(L,wx,wy)=>{let dx=L[2]-L[0],dy=L[3]-L[1];const l=Math.hypot(dx,dy);dx/=l;dy/=l;
+    const s=((wx-C[0])*dx+(wy-C[1])*dy)>=0?1:-1,u=[dx*s,dy*s];
+    const e=[[L[0],L[1]],[L[2],L[3]]].map(q=>({q,d:(q[0]-C[0])*u[0]+(q[1]-C[1])*u[1]})).sort((x,y)=>y.d-x.d)[0];
+    return {u,F:e.q,fd:e.d}};
+  const s1=side(L1,a.wx,a.wy),s2=side(L2,b.wx,b.wy);
+  const cs=s1.u[0]*s2.u[0]+s1.u[1]*s2.u[1];if(Math.abs(cs)>0.99999)return {err:'زاویه‌ی بین دو خط مناسب نیست'};
+  return {C,s1,s2,th:Math.acos(cs),z1:(a.p.info.z&&a.p.info.z[0])||0,z2:(b.p.info.z&&b.p.info.z[0])||0}}
+function filletDo(a,b,chamfer){
+  const k=cornerOf(a,b);if(k.err)return flash(k.err);const {C,s1,s2,th}=k,adds=[];
+  let T1,T2;
+  if(chamfer){T1=[C[0]+s1.u[0]*ED.d1,C[1]+s1.u[1]*ED.d1];T2=[C[0]+s2.u[0]*ED.d2,C[1]+s2.u[1]*ED.d2]}
+  else if(ED.fr>0){const d=ED.fr/Math.tan(th/2);T1=[C[0]+s1.u[0]*d,C[1]+s1.u[1]*d];T2=[C[0]+s2.u[0]*d,C[1]+s2.u[1]*d]}
+  else{T1=T2=C}
+  const d1=Math.hypot(T1[0]-C[0],T1[1]-C[1]),d2=Math.hypot(T2[0]-C[0],T2[1]-C[1]);
+  if(d1>=s1.fd-1e-9||d2>=s2.fd-1e-9)return flash('فاصله/شعاع از طول خط بیشتر است');
+  adds.push(mkLine(a.p,[s1.F[0],s1.F[1],k.z1],[T1[0],T1[1],k.z1]),mkLine(b.p,[s2.F[0],s2.F[1],k.z2],[T2[0],T2[1],k.z2]));
+  if(chamfer){if(d1>1e-12||d2>1e-12)adds.push(mkLine(a.p,[T1[0],T1[1],k.z1],[T2[0],T2[1],k.z1]))}
+  else if(ED.fr>0){const bx=s1.u[0]+s2.u[0],by=s1.u[1]+s2.u[1],bl=Math.hypot(bx,by),dist=ED.fr/Math.sin(th/2),O=[C[0]+bx/bl*dist,C[1]+by/bl*dist];
+    const a1=Math.atan2(T1[1]-O[1],T1[0]-O[0]),a2=Math.atan2(T2[1]-O[1],T2[0]-O[0]);let sw=a2-a1;while(sw>Math.PI)sw-=2*Math.PI;while(sw<-Math.PI)sw+=2*Math.PI;
+    adds.push(mkArc(a.p,O[0],O[1],ED.fr,a1,sw,k.z1))}
+  applyEdit([a.p,b.p],adds,chamfer?'چمفر شد':(ED.fr>0?'فیلت شد':'گوشه بسته شد'))}
+
+/* ---- آفست ---- */
+function offsetDo(p,wx,wy){
+  const d=ED.od;if(!(d>0))return flash('فاصله را وارد کنید');const I=p.info;let np=null;
+  if((I.type==='CIRCLE'||I.type==='ARC')&&I.c){
+    const inside=Math.hypot(wx-I.c[0],wy-I.c[1])<I.r,r2=inside?I.r-d:I.r+d;if(r2<=0)return flash('فاصله از شعاع بیشتر است');
+    if(I.type==='CIRCLE')np=mkCircle(p,I.c[0],I.c[1],r2,I.c[2]||0);
+    else{const a0=Math.atan2(p.pts[1]-I.c[1],p.pts[0]-I.c[0]);np=mkArc(p,I.c[0],I.c[1],r2,a0,I.sw,I.c[2]||0)}}
+  else if(p.pts.length>=4&&!I.xl){
+    let V=pathOf(p),Z=pathZ(p);const closed=!!p.closed&&V.length>3;
+    const W=[],WZ=[];for(let i=0;i<V.length;i++){if(i&&Math.hypot(V[i][0]-V[i-1][0],V[i][1]-V[i-1][1])<1e-12)continue;W.push(V[i]);WZ.push(Z[i])}
+    const nv=closed?W.length-1:W.length;if(nv<2)return flash('قابل آفست نیست');
+    const u0=nearU(W,wx,wy),i0=Math.min(Math.floor(u0),W.length-2),A=W[i0],Bq=W[i0+1];
+    const side=((Bq[0]-A[0])*(wy-A[1])-(Bq[1]-A[1])*(wx-A[0]))>=0?1:-1;
+    const sd=side*d,segs=[];
+    for(let i=0;i<W.length-1;i++){const a=W[i],b=W[i+1],dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*sd,ny=dx/l*sd;segs.push([a[0]+nx,a[1]+ny,b[0]+nx,b[1]+ny])}
+    const out=[];const ix=(s,t,fb)=>{const r=segX(s[0],s[1],s[2],s[3],t[0],t[1],t[2],t[3]);if(!r)return fb;const q=[s[0]+r[0]*(s[2]-s[0]),s[1]+r[0]*(s[3]-s[1])];
+      return Math.hypot(q[0]-fb[0],q[1]-fb[1])>12*d?fb:q};
+    const M=segs.length;
+    if(closed){for(let k=0;k<M;k++){const s=segs[(k+M-1)%M],t=segs[k];const q=ix(s,t,[t[0],t[1]]);out.push([q[0],q[1],WZ[k]])}}
+    else{out.push([segs[0][0],segs[0][1],WZ[0]]);for(let k=1;k<M;k++){const q=ix(segs[k-1],segs[k],[segs[k][0],segs[k][1]]);out.push([q[0],q[1],WZ[k]])}out.push([segs[M-1][2],segs[M-1][3],WZ[M]])}
+    np=mkPoly(p,out,closed)}
+  else return flash('این شیء آفست‌پذیر نیست');
+  pushHist('add',[np]);flash('آفست ساخته شد');edReset();renderPanel();req()}
+
+/* ---- جابجایی و کپی ---- */
+function shiftInfo(I,dx,dy){const J=Object.assign({},I);delete J.mine;
+  if(I.c)J.c=[I.c[0]+dx,I.c[1]+dy,I.c[2]];
+  if(I.ex){J.ex=Object.assign({},I.ex);if(I.ex.c)J.ex.c=[I.ex.c[0]+dx,I.ex.c[1]+dy,I.ex.c[2]]}
+  if(I.xl)J.xl=Object.assign({},I.xl,{x:I.xl.x+dx,y:I.xl.y+dy});return J}
+function mvCopy(dx,dy,copy){
+  const items=[...new Set(selSet)].filter(o=>!o.ann),skip=selSet.some(o=>o.ann);
+  if(!items.length)return flash('شیء قابل جابجایی انتخاب نشده');
+  const dels=[],adds=[];
+  for(const o of items){
+    if(o.s!==undefined){const t=addUserText(o.x+dx,o.y+dy,o.z,o.h,o.s,{rot:o.rot,col:o.col,ah:o.ah,av:o.av,f:o.f,xs:o.xs});t.b=o.b;adds.push(t)}
+    else{const P=o.pts,flat=P.map((v,i)=>v+(i%2?dy:dx));
+      let sn;if(o._sn)sn=o._sn.map(q=>[q[0]+dx,q[1]+dy,q[2],q[3]]);else{sn=[];const st=Math.max(2,Math.ceil(P.length/2/400))*2;for(let i=0;i<P.length;i+=st)sn.push([flat[i],flat[i+1],0,'e']);if(o.info.c)sn.push([o.info.c[0]+dx,o.info.c[1]+dy,o.info.c[2]||0,'c'])}
+      const np=mkLike(o,flat,o.closed,o.info.type,shiftInfo(o.info,dx,dy),sn);adds.push(np)}
+    if(!copy)dels.push(o)}
+  dels.forEach(o=>setDel(o,true));pushHist('edit',[],{dels,adds});
+  selSet=copy?selSet:adds.slice();pts=[];tent=null;flash((copy?'کپی شد ':'جابجا شد ')+(skip?'(مجموعه‌های دایمنشن و برچسب جابجا نمی‌شوند)':''));renderPanel();req()}
+
+/* ---- دایره و خط بی‌نهایت ---- */
+function mkXline(x,y,dx,dy,z){
+  const L=Math.hypot(dx,dy);if(!(L>0))return null;dx/=L;dy/=L;const D=1e7;
+  return addUserPrim([x-dx*D,y-dy*D,x+dx*D,y+dy*D],false,'XLINE',{xl:{x,y,dx,dy},z:[z||0,z||0]},[[x,y,z||0,'e'],[x+dx,y+dy,z||0,'e']],0x00bfff)}
+function xlClip(p,x0,y0,x1,y1){
+  const P=p.pts,dx=P[2]-P[0],dy=P[3]-P[1],mg=(x1-x0)*0.05+1e-9;let t0=0,t1=1;
+  const pp=[-dx,dx,-dy,dy],qq=[P[0]-(x0-mg),(x1+mg)-P[0],P[1]-(y0-mg),(y1+mg)-P[1]];
+  for(let i=0;i<4;i++){if(pp[i]===0){if(qq[i]<0)return null}else{const r=qq[i]/pp[i];if(pp[i]<0){if(r>t1)return null;if(r>t0)t0=r}else{if(r<t0)return null;if(r<t1)t1=r}}}
+  return [P[0]+dx*t0,P[1]+dy*t0,P[0]+dx*t1,P[1]+dy*t1]}
+function cxAuto(){
+  if(tool==='circ'&&pts.length>=2){const c=pts[0],r=Math.hypot(pts[1].x-c.x,pts[1].y-c.y);pts=[];if(!(r>0))return flash('شعاع صفر است');
+    const pr=mkCircle({col:0xffa500,lc:1,L:DB.mk},c.x,c.y,r,c.z||0);pushHist('add',[pr]);flash('دایره رسم شد')}
+  else if(tool==='xl'&&pts.length>=2){const a=pts[0],b=pts[1];pts=[];const pr=mkXline(a.x,a.y,b.x-a.x,b.y-a.y,a.z||0);if(!pr)return flash('دو نقطه یکی است');pushHist('add',[pr]);flash('خط بی‌نهایت رسم شد')}
+  else if((tool==='mov'||tool==='cpy')&&pts.length>=2){const a=pts[0],b=pts[1];pts=[];mvCopy(b.x-a.x,b.y-a.y,tool==='cpy')}}
+function cxPanel(){let h='';
+  if(tool==='circ'){
+    if(!pts.length&&!tent)h+='<div class="hint">مرکز دایره را مشخص کنید</div>';
+    else if(pts.length<2&&!(pts.length===1&&tent))h+='<div class="hint">یک نقطه روی دایره را مشخص کنید یا شعاع را بنویسید</div>';
+    const c=pts[0],q=pts.length>=2?pts[1]:(tent&&pts.length===1?tent:null);
+    if(c&&q){const r=Math.hypot(q.x-c.x,q.y-c.y);h+=row('شعاع',f(r),'big')+row('قطر',f(2*r))+row('محیط',f(2*Math.PI*r))}
+    h+=`<div class="fl keep"><label for="cxR">شعاع (عددی)</label><input type="number" id="cxR" inputmode="decimal" step="any" value="${ED.cr||''}"></div>`;
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1],['ed:circr','رسم با شعاع عددی',!pts.length],['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]])}
+  else{
+    h+=`<div class="hint">${!pts.length&&!tent?'نقطه‌ی عبور خط را مشخص کنید':'نقطه‌ی دوم (جهت خط) را مشخص کنید، یا «افقی / عمودی» را بزنید'}</div>`;
+    h+=btns([['confirm','✓ ثبت نقطه',!tent,1],['ed:xlh','افقی',!pts.length&&!tent],['ed:xlv','عمودی',!pts.length&&!tent],['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]])}
+  return h}
+function edPanel(){let h='';const hint=t=>'<div class="hint">'+t+'</div>';
+  const fld=(id,lb,v)=>`<div class="fl keep"><label for="${id}">${lb}</label><input type="number" id="${id}" inputmode="decimal" step="any" min="0" value="${v}"></div>`;
+  if(tool==='era')h+=hint('روی شیء ضربه بزنید تا پاک شود (برگرداندن ↶ بالای صفحه)');
+  else if(tool==='trm')h+=hint('روی بخشی از خط/کمان/دایره که می‌خواهید حذف شود ضربه بزنید؛ تا نزدیک‌ترین برخورد با اشیای دیگر بریده می‌شود');
+  else if(tool==='ext')h+=hint('نزدیک انتهایی که باید کشیده شود روی خط ضربه بزنید؛ تا اولین شیء مقابل ادامه می‌یابد');
+  else if(tool==='xpl')h+=hint('روی یک پلی‌لاین یا مستطیل ضربه بزنید تا به خط‌های جدا تبدیل شود');
+  else if(tool==='brk'){
+    h+=hint(ed.step===0?'روی شیئی که باید شکسته شود ضربه بزنید':ed.step===1?'نقطه‌ی اول شکستن را مشخص کنید (یا «شکستن در یک نقطه»)':'نقطه‌ی دوم را مشخص کنید؛ بین دو نقطه حذف می‌شود');
+    h+=btns([['ed:b1','شکستن در همین نقطه',ed.step<2,0],['ed:reset','لغو',ed.step===0]])}
+  else if(tool==='fil'){h+=fld('edFr','شعاع فیلت (۰ = گوشه‌ی تیز)',ED.fr)+hint(ed.a?'روی خط دوم (نزدیک بخشی که می‌ماند) ضربه بزنید':'روی خط اول (نزدیک بخشی که می‌ماند) ضربه بزنید');h+=btns([['ed:reset','لغو',!ed.a]])}
+  else if(tool==='chm'){h+=fld('edD1','فاصله‌ی اول',ED.d1)+fld('edD2','فاصله‌ی دوم',ED.d2)+hint(ed.a?'روی خط دوم ضربه بزنید':'روی خط اول ضربه بزنید');h+=btns([['ed:reset','لغو',!ed.a]])}
+  else if(tool==='off'){h+=fld('edOd','فاصله‌ی آفست',ED.od)+hint(ed.o?'سمت آفست را با ضربه‌ی کنار شیء مشخص کنید':'روی شیء (خط، پلی‌لاین، دایره، کمان) ضربه بزنید');h+=btns([['ed:reset','شیء دیگر',!ed.o]])}
+  else if(tool==='mov'||tool==='cpy'){
+    if(!selSet.length)h+=hint('ابتدا با ابزار «انتخاب» شیءها را انتخاب کنید')+btns([['ed:tosel','⛶ رفتن به انتخاب',0,1]]);
+    else h+=hint(`${new Set(selSet).size} شیء انتخاب شده — ${pts.length?'مقصد را':'نقطه‌ی مبدأ را'} مشخص و «ثبت نقطه» را بزنید`)+btns([['confirm','✓ ثبت نقطه',!tent,1],['undo','↶ حذف آخرین',!pts.length],['clear','لغو',!pts.length&&!tent]])}
+  return h}
+function edAct(a){
+  if(a==='reset'){edReset()}
+  else if(a==='tosel'){setTool('sel')}
+  else if(a==='mvgo'){setTool('mov')}
+  else if(a==='cpgo'){setTool('cpy')}
+  else if(a==='b1'){if(ed.o&&ed.p1)breakPrim(ed.o,ed.p1,null)}
+  else if(a==='circr'){const c=pts[0]||tent;if(c&&ED.cr>0){const pr=mkCircle({col:0xffa500,lc:1,L:DB.mk},c.x,c.y,ED.cr,c.z||0);pts=[];tent=null;pushHist('add',[pr]);flash('دایره رسم شد')}else flash('مرکز و شعاع را مشخص کنید')}
+  else if(a==='xlh'||a==='xlv'){const c=pts[0]||tent;if(c){const pr=a==='xlh'?mkXline(c.x,c.y,1,0,c.z||0):mkXline(c.x,c.y,0,1,c.z||0);pts=[];tent=null;pushHist('add',[pr]);flash('خط بی‌نهایت رسم شد')}}}
+function edTap(x,y){
+  const [wx,wy]=s2w(x,y);
+  if(tool==='brk'&&ed.step>=1){const sn=snapAt(x,y);
+    if(ed.step===1){ed.p1={x:sn.x,y:sn.y};ed.step=2;renderPanel();req();return}
+    breakPrim(ed.o,ed.p1,{x:sn.x,y:sn.y});return}
+  const o=pickEntity(x,y);
+  if(!o){flash('شیئی پیدا نشد');return}
+  if(tool==='era'){const L=expandAnn([o]);L.forEach(q=>setDel(q,true));pushHist('del',L);sel=null;flash('پاک شد');renderPanel();req();return}
+  if(o.s!==undefined){flash('این ابزار برای متن نیست');return}
+  if(o.ann){flash('این شیء بخشی از دایمنشن یا برچسب است');return}
+  if(tool==='trm')trimPrim(o,wx,wy);
+  else if(tool==='ext')extendPrim(o,wx,wy);
+  else if(tool==='xpl')explodePrim(o);
+  else if(tool==='brk'){ed.o=o;ed.step=1;sel=o;renderPanel();req()}
+  else if(tool==='fil'||tool==='chm'){
+    if(!ed.a){ed.a={p:o,wx,wy};sel=o;renderPanel();req()}
+    else{const a=ed.a;ed.a=null;sel=null;filletDo(a,{p:o,wx,wy},tool==='chm')}}
+  else if(tool==='off'){
+    if(!ed.o){ed.o=o;sel=o;renderPanel();req()}else offsetDo(ed.o,wx,wy)}}
+$('panel').addEventListener('input',e=>{const id=e.target.id,v=parseFloat(e.target.value);
+  if(id==='edFr')ED.fr=v>=0?v:0;else if(id==='edD1')ED.d1=v>=0?v:0;else if(id==='edD2')ED.d2=v>=0?v:0;else if(id==='edOd')ED.od=v>0?v:0;else if(id==='cxR'){ED.cr=v>0?v:0;req()}});
+function cxOverlay(live,pts,tent){
+  if(tool==='circ'){const c=pts[0];let r=0;
+    if(c&&live.length>=2)r=Math.hypot(live[1].x-c.x,live[1].y-c.y);else if(c&&ED.cr>0)r=ED.cr;
+    if(c&&r>0){const [a,b]=w2s(c.x,c.y);g.save();g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.arc(a,b,r*view.s,0,7);g.stroke();
+      if(live.length>=2){const [qa,qb]=w2s(live[1].x,live[1].y);g.beginPath();g.moveTo(a,b);g.lineTo(qa,qb);g.stroke()}g.restore()}
+    pts.forEach(p=>{const [a,b]=w2s(p.x,p.y);g.fillStyle='#ffd23f';g.beginPath();g.arc(a,b,4,0,7);g.fill()})}
+  else if(tool==='xl'&&live.length>=1){
+    pts.forEach(p=>{const [a,b]=w2s(p.x,p.y);g.fillStyle='#ffd23f';g.beginPath();g.arc(a,b,4,0,7);g.fill()});
+    if(live.length>=2){const [a,b]=w2s(live[0].x,live[0].y),[c,d]=w2s(live[1].x,live[1].y),L=Math.hypot(c-a,d-b);
+      if(L>1){const ux=(c-a)/L*6000,uy=(d-b)/L*6000;g.save();g.strokeStyle='#ffd23f';g.lineWidth=1.5;g.setLineDash([8,5]);g.beginPath();g.moveTo(a-ux,b-uy);g.lineTo(a+ux,b+uy);g.stroke();g.restore()}}}
+  else if((tool==='mov'||tool==='cpy')&&pts.length&&live.length>=2){
+    const [a,b]=w2s(live[0].x,live[0].y),[c,d]=w2s(live[live.length-1].x,live[live.length-1].y);
+    g.save();g.strokeStyle='#33ff99';g.lineWidth=2;g.setLineDash([6,4]);g.beginPath();g.moveTo(a,b);g.lineTo(c,d);g.stroke();g.restore()}
+  else if(EDT[tool]&&ed.o){g.save();g.strokeStyle='#ffd23f';g.lineWidth=3;g.beginPath();const P=ed.o.pts;let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(ed.o.closed)g.closePath();g.stroke();g.restore();
+    if(ed.p1){const [a,b]=w2s(ed.p1.x,ed.p1.y);g.fillStyle='#33ff99';g.beginPath();g.arc(a,b,5,0,7);g.fill()}}}
+
+/* ---- نمایش متن‌های کوچک: خوانا و بدون پرش ---- */
+function drawTexts(s,x0,y0,x1,y1,w2s){
+  g.textBaseline='alphabetic';const mn=+S.minTxt||0,lo=Math.max(mn,3.5),CS=80,grid=new Map();
+  const rectOf=(t,px,sx,sy)=>{const lines=(t.s||'').split('\n'),ml=lines.reduce((m,l)=>Math.max(m,l.length),1),w=px*0.55*ml,hh=px*1.3*lines.length;
+    const xl=t.ah==='center'?sx-w/2:t.ah==='right'?sx-w:sx;return [xl,sy-hh,xl+w,sy+hh*0.2]};
+  const put=r=>{for(let gx=Math.floor(r[0]/CS);gx<=Math.floor(r[2]/CS);gx++)for(let gy=Math.floor(r[1]/CS);gy<=Math.floor(r[3]/CS);gy++){const k=gx+','+gy;let a=grid.get(k);if(!a)grid.set(k,a=[]);a.push(r)}};
+  const hit=r=>{for(let gx=Math.floor(r[0]/CS);gx<=Math.floor(r[2]/CS);gx++)for(let gy=Math.floor(r[1]/CS);gy<=Math.floor(r[3]/CS);gy++){const a=grid.get(gx+','+gy);if(a)for(const q of a)if(!(q[2]<r[0]||q[0]>r[2]||q[3]<r[1]||q[1]>r[3]))return true}return false};
+  const small=[];
+  for(const t of DB.texts){
+    if(!t.L.on||t.del)continue;const px=t.h*s,mg=t.h*40;if(t.x<x0-mg||t.x>x1+mg||t.y<y0-mg||t.y>y1+mg)continue;
+    if(px>=lo){const [sx,sy]=w2s(t.x,t.y);paintText(t,s,sx,sy,dispCol(t.col));if(px>=4)put(rectOf(t,px,sx,sy))}
+    else if(mn>0&&px>=mn*0.3)small.push(t)}
+  small.sort((a,b)=>b.h-a.h||a.x-b.x||a.y-b.y);
+  for(const t of small){const [sx,sy]=w2s(t.x,t.y),r=rectOf(t,mn,sx,sy);if(hit(r))continue;put(r);paintText(t,mn/t.h,sx,sy,dispCol(t.col),true)}}
+
+/* ---- حالت خواندنی / ویرایش ---- */
+const VIEW_OK={pan:1,id:1,dist:1,area:1,angle:1,prop:1,exp:1};
+const PMIN=new Set(['line','pl','arc','circ','xl','era','trm','ext','brk','fil','chm','off','xpl','mov','cpy','coord','text','dal','dli','darc','dord']);
+function applyMode(){const v=S.mode==='view';
+  document.body.classList.toggle('viewmode',v);
+  const b=$('bMode');if(b){b.textContent=v?'👁':'✏️';b.title=v?'حالت خواندنی (برای ویرایش بزنید)':'حالت ویرایش (برای خواندن بزنید)'}
+  const u=$('bUndo');if(u)u.style.display=v?'none':'';
+  buildTools();buildSub()}
+function viewAuto(){
+  if(S.mode!=='view'||!tent)return;
+  if(tool==='dist'){if(pts.length>=2)pts=[];pts.push(tent);tent=null}
+  else if(tool==='area'){pts.push(tent);tent=null}
+  else if(tool==='angle'){if(pts.length>=3)pts=[];pts.push(tent);tent=null}}
+$('bMode').onclick=()=>{S.mode=S.mode==='view'?'edit':'view';saveCfg();setTool('pan');applyMode();flash(S.mode==='view'?'حالت خواندنی: هیچ چیز تغییر نمی‌کند':'حالت ویرایش')};
+
+/* ---- بستن نقشه ---- */
+function closeMapNow(){
+  DB=null;fileName='';hist=[];updUndo();pts=[];tent=null;log=[];sel=null;selSet=[];isDirty=false;setDirtyUI();
+  tool='pan';$('fname').textContent='—';$('empty').style.display='';renderPanel();buildTools();buildSub();req();refreshSaved()}
+$('bClose').onclick=()=>{
+  if(!DB)return;
+  if(!isDirty||!DB.srcText){closeMapNow();return}
+  openSheet(`<h3>بستن نقشه</h3><div class="sn">تغییرات ذخیره‌نشده دارید. پیش از بستن ذخیره شود؟<br>اگر این پنجره را ببندید یا برنامه را رها کنید، چیزی ذخیره نمی‌شود و نقشه‌ی قبلی دست‌نخورده می‌ماند.</div>
+  <div class="btns"><button class="pri" id="clSave">💾 ذخیره و بستن</button><button id="clNo">بدون ذخیره</button><button id="clCancel">ماندن</button></div>`);
+  $('clSave').onclick=async()=>{await saveProject(true);$('sheet').style.display='none';closeMapNow()};
+  $('clNo').onclick=()=>{$('sheet').style.display='none';closeMapNow()};
+  $('clCancel').onclick=()=>{$('sheet').style.display='none'}};
+
+/* ---- تنظیمات بخش‌بندی‌شده ---- */
+let setTab='disp';
+function openSettings(tab){
+  if(tab)setTab=tab;
+  const TABS={disp:'نمایش',txt:'متن',snap:'اسنپ',sty:'استایل‌ها',file:'فایل',about:'درباره'};
+  const L=(t,body)=>`<div class="lr"><span class="nm" style="text-align:right;direction:rtl">${t}</span>${body}</div>`;
+  const CK=(id,t,on)=>`<label class="lr"><input type="checkbox" id="${id}" ${on?'checked':''}><span class="nm" style="direction:rtl;text-align:right">${t}</span></label>`;
+  let b='';
+  if(setTab==='disp')b=L('تعداد رقم اعشار',`<select id="sDec">${[0,1,2,3,4,5,6].map(n=>`<option ${n===S.dec?'selected':''}>${n}</option>`).join('')}</select>`)+CK('sD','پس‌زمینه‌ی تیره',S.dark)
+    +L('حالت برنامه',`<select id="sMode">${opts({edit:'ویرایش',view:'خواندنی (فقط نمایش و اندازه‌گیری)'},S.mode)}</select>`)
+    +L('حداقل اندازه‌ی متن روی صفحه',`<select id="sMin">${opts({0:'خاموش',6:'۶ پیکسل',8:'۸ پیکسل',10:'۱۰ پیکسل',12:'۱۲ پیکسل',14:'۱۴ پیکسل'},S.minTxt)}</select>`)
+    +'<div class="sn">متن‌های ریزتر از این اندازه، با لبه‌ی روشن و بدون روی هم افتادن بزرگ می‌شوند؛ متن‌های خیلی ریز و شلوغ دیده نمی‌شوند تا بزرگ‌نمایی کنید.</div>';
+  else if(setTab==='txt')b=L('فونت متن‌های نقشه',`<select id="sFont">${opts(FONTS,S.font)}</select>`)+L('فونت حروف لاتین و اعداد انگلیسی',`<select id="sLat">${opts(LATS,S.lat)}</select>`)
+    +L('ترتیب حروف فارسی',`<select id="sPtx">${opts({normal:'عادی',rev:'وارونه (اگر متن برعکس دیده می‌شود)'},S.ptxt)}</select>`)
+    +'<div class="sn">فونت‌های فارسی فقط حروف فارسی و عدد را عوض می‌کنند؛ برای حروف لاتین فونت جدا انتخاب کنید.</div>';
+  else if(setTab==='snap')b=CK('sSnap','فعال بودن اسنپ',S.snap)+CK('sE','اسنپ به انتها / رأس / نقطه‌ی درج',S.snapE)+CK('sM','اسنپ به وسط',S.snapM)+CK('sC','اسنپ به مرکز دایره/کمان',S.snapC);
+  else if(setTab==='sty')b='<div class="btns"><button id="sDS">🎨 استایل دایمنشن</button><button id="sTS">🔤 استایل متن</button><button id="sCS">🧭 سبک مختصات</button></div>';
+  else if(setTab==='file')b='<div class="btns"><button id="xMine">💾 ذخیره‌ی ترسیم‌ها و متن‌های من</button><button id="xAll">💾 ذخیره‌ی کل نقشه (ساده‌شده)</button></div><div class="sn">خروجی، فایل DXF متنی است و در اتوکد باز می‌شود. اگر گوشی پنجره‌ی اشتراک‌گذاری باز کرد، «ذخیره در فایل‌ها» را بزنید.</div><h3 style="margin-top:14px">گزارش فایل</h3>'+(DB?reportHTML():'<div class="sn">فایلی باز نیست</div>');
+  else b=`<div class="ver" style="text-align:right">نسخه‌ی ${APP_VER}</div><ul style="padding-right:18px;line-height:1.9">${NEWS.map(x=>'<li>'+x+'</li>').join('')}</ul>`;
+  openSheet(`<h3>تنظیمات</h3><div class="tabs">${Object.entries(TABS).map(([k,v])=>`<button data-tab="${k}" class="${k===setTab?'on':''}">${v}</button>`).join('')}</div>${b}`);
+  const bx=$('sheetBox');
+  bx.querySelectorAll('[data-tab]').forEach(t=>t.onclick=()=>openSettings(t.dataset.tab));
+  bx.onchange=()=>{const g2=id=>$(id);
+    if(g2('sDec'))S.dec=+g2('sDec').value;if(g2('sSnap'))S.snap=g2('sSnap').checked;if(g2('sE'))S.snapE=g2('sE').checked;if(g2('sM'))S.snapM=g2('sM').checked;if(g2('sC'))S.snapC=g2('sC').checked;
+    if(g2('sD'))S.dark=g2('sD').checked;if(g2('sFont'))S.font=g2('sFont').value;if(g2('sLat'))S.lat=g2('sLat').value;if(g2('sPtx'))S.ptxt=g2('sPtx').value;if(g2('sMin'))S.minTxt=+g2('sMin').value;
+    if(g2('sMode')&&g2('sMode').value!==S.mode){S.mode=g2('sMode').value;setTool('pan');applyMode()}
+    syncChips();saveCfg();renderPanel();req()};
+  const ex=only=>{if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');const base=(fileName||'map').replace(/\.[^.]+$/,'');saveText(base+(only?'-markup':'-edit')+'.dxf',buildDXF(only))};
+  if($('xMine'))$('xMine').onclick=()=>ex(true);if($('xAll'))$('xAll').onclick=()=>ex(false);
+  if($('sDS'))$('sDS').onclick=openDS;if($('sTS'))$('sTS').onclick=openTS;if($('sCS'))$('sCS').onclick=openCS}
+$('bSet').onclick=()=>openSettings('disp');
+setDirtyUI();
+
 buildTools();syncChips();loadFonts();$('ver').textContent='v'+APP_VER;
-(async()=>{try{const k=localStorage.getItem('mv_resume');if(k){localStorage.removeItem('mv_resume');await loadSaved(k)}}catch(_){}refreshSaved();showNews()})();
+(async()=>{try{const k=localStorage.getItem('mv_resume');if(k){localStorage.removeItem('mv_resume');await loadSaved(k,'r:');isDirty=true;setDirtyUI()}}catch(_){}refreshSaved();showNews()})();
 
 /* ---- file ---- */
 function setDB(d,name){d.anns=[];DB=d;fileName=name;tool='pan';pts=[];tent=null;log=[];sel=null;hover=null;hist=[];updUndo();
