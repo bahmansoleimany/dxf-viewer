@@ -17,7 +17,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:system-ui,Vazirmatn,Tahoma,sans-serif;overscroll-behavior:none;font-size:14px}
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh}
-button{font:inherit;color:inherit;background:var(--bar);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+button{font:inherit;color:inherit;background:var(--bar);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;cursor:pointer}
 button:active{background:#2a313c}
 button.pri{background:var(--acc);border-color:var(--acc);color:#04121f;font-weight:700}
 button:disabled{opacity:.4}
@@ -45,20 +45,20 @@ button:disabled{opacity:.4}
 #tools button i{font-style:normal;font-size:19px;line-height:1.1}
 #tools button.on{color:var(--acc);background:#232b36}
 #sheet{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:9}
-#sheet .box{background:var(--bar);width:100%;max-width:560px;max-height:78vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px;border:1px solid var(--line)}
+#sheet .box{background:var(--bar);width:100%;max-width:560px;max-height:78vh;overflow:auto;border-radius:calc(var(--r)*1.7) 16px 0 0;padding:14px;border:1px solid var(--line)}
 #sheet h3{margin:0 0 10px;font-size:16px}
 .lr{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #28303b}
 .lr .sw{width:16px;height:16px;border-radius:4px;border:1px solid #555;flex:none}
 .lr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right;white-space:nowrap}
 .lr .ct{color:var(--mut);font-size:12px}
 .lr input[type=checkbox]{width:20px;height:20px}
-select{font:inherit;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px}
-input[type=text],input[type=number]{font:inherit;font-size:16px;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;direction:rtl}
+select{font:inherit;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:var(--r);padding:6px}
+input[type=text],input[type=number]{font:inherit;font-size:16px;background:#12161b;color:var(--tx);border:1px solid var(--line);border-radius:var(--r);padding:8px;width:100%;direction:rtl}
 .fl{display:flex;gap:8px;align-items:center;margin-top:8px}.fl label{color:var(--mut);white-space:nowrap}
 #brand{width:96px;height:96px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
 .ver{color:var(--mut);font-size:12px;line-height:1.9;padding-top:8px}
 #chips{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
-#chips button{padding:5px 11px;font-size:12px;border-radius:16px;background:rgba(30,35,43,.92)}
+#chips button{padding:5px 11px;font-size:12px;border-radius:calc(var(--r)*1.7);background:rgba(30,35,43,.92)}
 #chips button.on{background:var(--ok);color:#04210f;border-color:var(--ok);font-weight:700}
 #sub{display:none;overflow-x:auto;background:#232b36;border-top:1px solid var(--line);scrollbar-width:none}
 #sub::-webkit-scrollbar{display:none}
@@ -88,13 +88,45 @@ input[type=text],input[type=number]{font:inherit;font-size:16px;background:#1216
 #bSave.dot::after{content:'';position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff9f1c}
 .tabs{display:flex;gap:4px;overflow-x:auto;margin:0 0 10px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tabs button{flex:0 0 auto;padding:6px 12px;font-size:12.5px;border-radius:16px}
+.tabs button{flex:0 0 auto;padding:6px 12px;font-size:12.5px;border-radius:calc(var(--r)*1.7)}
 .tabs button.on{background:var(--acc);color:#04101f;border-color:var(--acc);font-weight:700}
 body.slim #tools button{padding:3px 4px;font-size:10px}
 body.slim #tools i{font-size:15px}
 body.slim #panel{padding:4px 8px;max-height:30vh}
 body.slim .grab{margin-top:-4px}
 body.viewmode #bSave.dot::after{display:none}
+#dwgov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99;display:flex;align-items:center;justify-content:center}
+#dwgov .dbox{background:#1b222b;border:1px solid #3a4656;border-radius:calc(var(--r)*1.9);padding:22px 26px;text-align:center;min-width:240px;max-width:86vw}
+#dwgov .dspin{width:46px;height:46px;border-radius:50%;border:5px solid #34506b;border-top-color:#4aa8ff;margin:0 auto 14px;animation:dsp 0.9s linear infinite}
+@keyframes dsp{to{transform:rotate(360deg)}}
+#dwgt{font-size:15px;margin-bottom:6px}#dwgs{font-size:12px;opacity:.7;direction:ltr}
+
+:root{--r:clamp(9px,2.8vmin,18px)}
+button,select,input[type=text],input[type=number]{border-radius:var(--r)}
+#panel{border-radius:calc(var(--r)*1.7) calc(var(--r)*1.7) 0 0}
+#sub{border-radius:calc(var(--r)*1.4) calc(var(--r)*1.4) 0 0}
+button{transition:transform .1s ease,filter .1s ease,background .15s}
+button:not(:disabled):active{transform:scale(.92);filter:brightness(1.35)}
+@keyframes pls{0%{box-shadow:0 0 0 0 rgba(62,166,255,.65)}100%{box-shadow:0 0 0 13px rgba(62,166,255,0)}}
+button.pls{animation:pls .4s ease-out}
+i svg,#top button svg{width:22px;height:22px;display:block;margin:0 auto}
+#tools i,#sub i{display:block}
+#tools button,#sub button{gap:3px}
+#top{gap:4px!important}
+#top button{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 9px}
+#top #fname{min-width:0;flex:1 1 0;overflow:hidden;text-overflow:ellipsis}
+#top button svg{width:20px;height:20px;margin:0}
+.grab{height:24px!important}
+.grab::after{top:9px!important}
+.pbtns{position:absolute;left:2px;top:-2px;display:flex;gap:7px}
+.pbt{width:30px;height:30px;padding:4px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#27303c;border:1px solid var(--line);color:var(--mut)}
+.pbt svg{width:19px;height:19px;margin:0!important}
+.pbt.on{background:var(--acc);color:#04101f;border-color:var(--acc)}
+#panel:not(.hon) .hint{display:none!important}
+#wel{position:fixed;top:66px;right:10px;left:10px;max-width:360px;margin:0 auto;background:#1f2b3a;border:1px solid #3f9cff;border-radius:calc(var(--r)*1.6);padding:14px 16px;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.5);line-height:1.9;font-size:13.5px}
+#wel::before{content:'';position:absolute;top:-9px;right:34px;width:16px;height:16px;background:#1f2b3a;border-left:1px solid #3f9cff;border-top:1px solid #3f9cff;transform:rotate(45deg)}
+#wel ol{margin:6px 0 10px;padding-right:20px}
+#wel button{width:100%}
 </style>
 </head>
 <body>
@@ -381,8 +413,8 @@ const $=id=>document.getElementById(id);
 const cv=$('cv');let g=cv.getContext('2d');
 let W=0,H=0,dpr=1,DB=null,fileName='—';
 const view={cx:0,cy:0,s:1};
-const APP_VER='1.4.0';
-const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true,ortho:false,lw:false,font:'naz',lat:'sans',ptxt:'normal',minTxt:8,mode:'edit',dlm:'auto',dom:'auto',pmin:false,idq:true};
+const APP_VER='1.5.0';
+const S={dec:3,snap:true,snapE:true,snapM:true,snapC:true,dark:true,ortho:false,lw:false,font:'naz',lat:'sans',ptxt:'normal',minTxt:8,mode:'edit',dlm:'auto',dom:'auto',pmin:false,idq:true,cbg:true,lps:'m',lpz:6,snapPt:true,snapP:true,snapX:true,snapQ:true,snapN:false};
 const FONTS={naz:'نازنین',nazb:'نازنین پررنگ',titr:'تیتر',lotus:'لوتوس',zar:'زر',yagut:'یاقوت',mitra:'میترا',traffic:'ترافیک',sys:'فونت سیستم'};
 const LATS={sans:'بدون سر (ساده)',serif:'سریف (کتابی)',mono:'هم‌عرض',cur:'دست‌نویس'};const LATF={sans:"Tahoma,'DejaVu Sans',Arial,sans-serif",serif:"Georgia,'Times New Roman','DejaVu Serif',serif",mono:"Menlo,Consolas,'Courier New',monospace",cur:"'Snell Roundhand','Comic Sans MS',cursive"};
 const fontCss=k=>(k==='sys'?'':"'F_"+k+"',")+(LATF[S.lat]||LATF.sans)
@@ -396,7 +428,7 @@ let CSL=[{id:'c1',name:'ساده کنار نقطه',tpl:'X={x}\\nY={y}\\nZ={z}',
 let CI={n:1,auto:false};
 const COLS={16753920:'نارنجی',16765503:'زرد',3407769:'سبز',4171519:'آبی',16734815:'قرمز',16777215:'سفید'};
 let selSet=[],box=null,dimArc=null,GID=0,tentT=null,dragT=null,expRect=null;const aux=new Set();
-function saveCfg(){try{localStorage.setItem('mv_cfg2',JSON.stringify({S:{dec:S.dec,snap:S.snap,snapE:S.snapE,snapM:S.snapM,snapC:S.snapC,dark:S.dark,ortho:S.ortho,lw:S.lw,font:S.font,lat:S.lat,mode:S.mode,ptxt:S.ptxt,minTxt:S.minTxt,dlm:S.dlm,dom:S.dom,idq:S.idq},TS,tsi,DSL,dsi,CSL,csi,CI}))}catch(_){}}
+function saveCfg(){try{localStorage.setItem('mv_cfg2',JSON.stringify({S:{dec:S.dec,snap:S.snap,snapE:S.snapE,snapM:S.snapM,snapC:S.snapC,dark:S.dark,ortho:S.ortho,lw:S.lw,font:S.font,lat:S.lat,mode:S.mode,ptxt:S.ptxt,minTxt:S.minTxt,dlm:S.dlm,dom:S.dom,idq:S.idq,cbg:S.cbg,lps:S.lps,lpz:S.lpz,snapPt:S.snapPt,snapP:S.snapP,snapX:S.snapX,snapQ:S.snapQ,snapN:S.snapN},TS,tsi,DSL,dsi,CSL,csi,CI}))}catch(_){}}
 try{const c=JSON.parse(localStorage.getItem('mv_cfg2')||'null');if(c){Object.assign(S,c.S||{});if(c.TS&&c.TS.length)TS=c.TS;if(c.DSL&&c.DSL.length)DSL=c.DSL;if(c.CSL&&c.CSL.length)CSL=c.CSL;tsi=c.tsi|0;dsi=c.dsi|0;csi=c.csi|0;Object.assign(CI,c.CI||{})}}catch(_){}
 if(!TS[tsi])tsi=0;if(!DSL[dsi])dsi=0;if(!CSL[csi])csi=0;
 let tool='pan',pts=[],tent=null,log=[],sel=null,hover=null,prec=null,holdT=null,hist=[],selSeg=0,pickSeg=0;
@@ -444,7 +476,7 @@ function drawScene(view,W,H){
 function marker(x,y,t,col){const [a,b]=w2s(x,y);markerPx(a,b,t,col)}
 function markerPx(a,b,t,col){
   g.strokeStyle=col;g.lineWidth=2;g.beginPath();
-  if(t){if(t==='m'){g.moveTo(a-8,b+7);g.lineTo(a+8,b+7);g.lineTo(a,b-8);g.closePath()}else if(t==='c'){g.arc(a,b,8,0,7)}else{g.rect(a-8,b-8,16,16)}}
+  if(t){if(t==='x'){g.moveTo(a-7,b-7);g.lineTo(a+7,b+7);g.moveTo(a+7,b-7);g.lineTo(a-7,b+7)}else if(t==='p'){g.moveTo(a-8,b+8);g.lineTo(a-8,b-8);g.moveTo(a-8,b+8);g.lineTo(a+8,b+8);g.moveTo(a-8,b);g.lineTo(a,b);g.lineTo(a,b+8)}else if(t==='q'){g.moveTo(a,b-9);g.lineTo(a+9,b);g.lineTo(a,b+9);g.lineTo(a-9,b);g.closePath()}else if(t==='r'){g.moveTo(a-8,b-8);g.lineTo(a+8,b-8);g.lineTo(a-8,b+8);g.lineTo(a+8,b+8);g.closePath()}else if(t==='m'){g.moveTo(a-8,b+7);g.lineTo(a+8,b+7);g.lineTo(a,b-8);g.closePath()}else if(t==='c'){g.arc(a,b,8,0,7)}else{g.rect(a-8,b-8,16,16)}}
   g.moveTo(a-16,b);g.lineTo(a-4,b);g.moveTo(a+4,b);g.lineTo(a+16,b);g.moveTo(a,b-16);g.lineTo(a,b-4);g.moveTo(a,b+4);g.lineTo(a,b+16);
   g.stroke();g.lineWidth=1}
 /* حالت زنده: هنگام نگه‌داشتن/کشیدن، نقطه‌ی در حال جابه‌جایی جایگزین نقطه‌ی قبلی می‌شود */
@@ -456,10 +488,10 @@ function curState(){
     if(d.k==='tent')return {pts,tent:sn,log};
     if(d.k==='log')return {pts,tent,log:log.map((p,i)=>i===d.i?sn:p)};}
   return {pts,tent:sn,log};}
-function loupeSize(){return Math.round(Math.max(92,Math.min(132,Math.min(W,H)*0.27)))}
+function loupeSize(){const m=Math.min(W,H),k=S.lps==='s'?[78,108,.2]:S.lps==='l'?[118,172,.36]:[92,132,.27];return Math.round(Math.min(Math.max(k[0],Math.min(k[1],m*k[2])),m*0.42))}
 function drawLoupe(){
   if(!prec)return;
-  const L=loupeSize(),Z=6,bw=5,M=bw+6;let lx=M,ly=M;
+  const L=loupeSize(),Z=(+S.lpz||6),bw=5,M=bw+6;let lx=M,ly=M;
   if(prec.x<L+M+40&&prec.y<L+M+40)lx=W-L-M;
   const [wx,wy]=s2w(prec.x,prec.y),sn=prec.snap;
   g.save();g.beginPath();g.rect(lx,ly,L,L);g.clip();g.translate(lx,ly);
@@ -471,7 +503,7 @@ function drawLoupe(){
   g.fillStyle='rgba(10,12,16,.82)';g.fillRect(0,L-fs*2.9,L,fs*2.9);
   g.fillStyle='#e8ecf2';g.font=fs+'px ui-monospace,Menlo,monospace';g.textAlign='left';g.textBaseline='alphabetic';
   g.fillText('X '+f(sn.x),5,L-fs*1.7);g.fillText('Y '+f(sn.y),5,L-fs*0.55);
-  if(sn.t){g.fillStyle='#33ff99';g.textAlign='right';g.font=fs+'px Tahoma,sans-serif';g.fillText({e:'انتها',m:'وسط',c:'مرکز',i:'درج',n:'نقطه'}[sn.t]||'',L-5,L-fs*0.55)}
+  if(sn.t){g.fillStyle='#33ff99';g.textAlign='right';g.font=fs+'px Tahoma,sans-serif';g.fillText({e:'انتها',m:'وسط',c:'مرکز',i:'درج',n:'نقطه',x:'تقاطع',p:'عمود',q:'ربع',r:'نزدیک'}[sn.t]||'',L-5,L-fs*0.55)}
   g.restore();
   g.lineWidth=1.5;g.strokeStyle='rgba(0,0,0,.7)';g.strokeRect(lx-bw-0.75,ly-bw-0.75,L+2*bw+1.5,L+2*bw+1.5);
   g.lineWidth=bw;g.strokeStyle='#ff8c00';g.strokeRect(lx-bw/2,ly-bw/2,L+bw,L+bw);g.lineWidth=1}
@@ -497,14 +529,16 @@ function drawOverlay(){
 }
 
 /* ---- snap / pick ---- */
-const snapOK=t=>S.snap&&((t==='m')?S.snapM:(t==='c')?S.snapC:S.snapE);
+const snapOK=t=>S.snap&&((t==='m')?S.snapM:(t==='c')?S.snapC:(t==='n')?S.snapPt:S.snapE);
 function snapAt(px,py){
+  if(FORCEP)return {x:FORCEP.x,y:FORCEP.y,z:FORCEP.z||0,t:null};
   {const ref=orthoRef();if(ref){let [qx,qy]=s2w(px,py);if(Math.abs(qx-ref.x)>=Math.abs(qy-ref.y))qy=ref.y;else qx=ref.x;[px,py]=w2s(qx,qy)}}
   const [wx,wy]=s2w(px,py);let best=-1,bd=1e18;const R=26;
   if(DB&&S.snap){const rw=R/view.s,x0=wx-rw,x1=wx+rw,y0=wy-rw,y1=wy+rw,{sx,sy,st,sl,so}=DB;
     for(let i=0,n=sx.length;i<n;i++){const x=sx[i];if(x<x0||x>x1)continue;const y=sy[i];if(y<y0||y>y1)continue;
       const t=st[i];if(!sl[i].on||!snapOK(t))continue;const ow=so[i];if(ow&&ow.del)continue;
       const d=Math.hypot(x-wx,y-wy)*view.s+(t==='m'?5:t==='c'?2:0);if(d<bd&&d<=R){bd=d;best=i}}}
+  {const dq=dynSnap(wx,wy,R,best>=0?bd:1e18);if(dq)return dq}
   if(best>=0)return {x:DB.sx[best],y:DB.sy[best],z:DB.sz[best],t:DB.st[best]};
   return {x:wx,y:wy,z:0,t:null};}
 function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-ax-t*dx,py-ay-t*dy)}
@@ -566,7 +600,7 @@ cv.addEventListener('pointermove',e=>{
     prec.x=p.x;prec.y=p.y;prec.snap=snapAt(p.x,p.y);o.x=p.x;o.y=p.y;renderPanel();req();return}
   if(holdT&&Math.hypot(p.x-o.sx,p.y-o.sy)>10)cancelHold();
   if(ptrs.size===1){
-    if(!moved&&Math.hypot(p.x-o.sx,p.y-o.sy)>8){moved=true;if(tool==='sel'||tool==='exp')box={x0:o.sx,y0:o.sy,x1:p.x,y1:p.y}}
+    if(!moved&&Math.hypot(p.x-o.sx,p.y-o.sy)>11){moved=true;if(tool==='sel'||tool==='exp')box={x0:o.sx,y0:o.sy,x1:p.x,y1:p.y}}
     if(moved){if(box){box.x1=p.x;box.y1=p.y;req()}else{view.cx-=(p.x-o.x)/view.s;view.cy+=(p.y-o.y)/view.s;req()}}
     o.x=p.x;o.y=p.y;}
   else if(ptrs.size===2&&pinch){
@@ -576,7 +610,7 @@ cv.addEventListener('pointermove',e=>{
 function up(e){if(aux.has(e.pointerId)){aux.delete(e.pointerId);return}const o=ptrs.get(e.pointerId);if(!o)return;if(dragT){endDrag(e.type==='pointerup');ptrs.delete(e.pointerId);return}const was=ptrs.size;ptrs.delete(e.pointerId);cancelHold();
   if(prec){if(e.type==='pointerup'&&was===1)commitPrec();else{prec=null;renderPanel();req()}return}
   if(box){if(was===1&&e.type==='pointerup')applyBox();box=null;if(ptrs.size<2)pinch=null;if(ptrs.size===1)moved=true;req();return}
-  if(was===1&&!moved&&performance.now()-o.t<700&&e.type==='pointerup')onTap(o.sx,o.sy);
+  if(was===1&&!moved&&(!MEAS[tool]||performance.now()-o.t<700)&&e.type==='pointerup')onTap(o.sx,o.sy);
   if(ptrs.size<2)pinch=null;if(ptrs.size===1)moved=true}
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e),wp=s2w(p.x,p.y);
@@ -595,7 +629,7 @@ function zoomExtents(){
 const f=v=>Number(v).toFixed(S.dec);
 const dmsStr=a=>{let d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;if(s>=59.995){s=0;m++}if(m>=60){m=0;d++}return d+'° '+m+"' "+s.toFixed(1)+'"'};
 const gon=a=>(a*400/360).toFixed(4)+' gon';
-const snapName=t=>({e:'اسنپ: انتها / رأس',m:'اسنپ: وسط',c:'اسنپ: مرکز',i:'اسنپ: نقطه‌ی درج / متن',n:'اسنپ: نقطه'}[t]||'بدون اسنپ (نقطه‌ی آزاد)');
+const snapName=t=>({e:'اسنپ: انتها / رأس',m:'اسنپ: وسط',c:'اسنپ: مرکز',i:'اسنپ: نقطه‌ی درج / متن',n:'اسنپ: نقطه',x:'اسنپ: تقاطع',p:'اسنپ: عمود',q:'اسنپ: ربع دایره',r:'اسنپ: نزدیک‌ترین نقطه روی شیء'}[t]||'بدون اسنپ (نقطه‌ی آزاد)');
 const row=(k,v,c='')=>`<div class="r ${c}"><span>${k}</span><b dir="ltr">${v}</b></div>`;
 const btns=a=>'<div class="btns">'+a.map(([act,l,dis,pri])=>`<button data-a="${act}" class="${pri?'pri':''}" ${dis?'disabled':''}>${l}</button>`).join('')+'</div>';
 function seg(a,b){const dx=b.x-a.x,dy=b.y-a.y;let az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;return {dx,dy,d:Math.hypot(dx,dy),az,dz:(b.z||0)-(a.z||0)}}
@@ -667,7 +701,7 @@ function renderPanel(){
     h+=`<div class="fl"><label>استایل</label><select id="tTs">${TS.map((x,i)=>`<option value="${i}" ${i===tsi?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`;
     h+=`<div class="fl"><input type="text" id="tT" placeholder="متن دلخواه" value="${esc(S.tt||'')}"></div>`;
     h+=btns([['ttxt','درج متن',!tent,1],['tstyle','🔤 استایل متن'],['clear','لغو',!tent]]);}
-  P.innerHTML='<div class="grab"></div>'+h.replace(/class="hint"/g,'class="hint keep"');P.classList.toggle('min',!!S.pmin);}
+  P.innerHTML='<div class="grab"></div>'+h.replace(/class="hint"/g,'class="hint keep"');P.classList.toggle('min',!!S.pmin);panelExtras();}
 function copyText(){
   const live=tent?pts.concat([tent]):pts.slice();let t='';
   if(tool==='id'){const L=log.length?log:(tent?[tent]:[]);t=L.map((p,i)=>`${i+1}\t${f(p.x)}\t${f(p.y)}\t${f(p.z)}`).join('\n')}
@@ -678,7 +712,7 @@ function copyText(){
   const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).catch(fb);else fb();
   flash('کپی شد');}
-function flash(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#33c27f;color:#04210f;padding:6px 14px;border-radius:20px;font-weight:700;z-index:20';document.body.appendChild(d);setTimeout(()=>d.remove(),1100)}
+function flash(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#33c27f;color:#04210f;padding:6px 14px;border-radius:calc(var(--r)*1.9);font-weight:700;z-index:20';document.body.appendChild(d);setTimeout(()=>d.remove(),1100)}
 function onTap(x,y){
   if(!DB||tool==='pan'||tool==='exp')return;
   if(tool==='sel'){const o=pickEntity(x,y);
@@ -709,6 +743,7 @@ $('panel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
   else if(a==='eJpg'){doExport('jpg');return}else if(a==='ePng'){doExport('png');return}else if(a==='ePdf'){doExport('pdf');return}
   else if(a==='eAll'){expRect=extentsRect()}
   else if(a&&a.startsWith('ed:')){edAct(a.slice(3))}
+  else if(a&&a.startsWith('v5:')){v5Act(a.slice(3));return}
   else if(a==='ctr'&&sel){showCenter();return}
   else if(a==='copy')copyText();
   renderPanel();req()});
@@ -877,7 +912,7 @@ const byId=(L,id)=>L.find(x=>x.id===id)||L[0];
 const tsById=id=>byId(TS,id),dsById=id=>byId(DSL,id),csById=id=>byId(CSL,id);
 const dsCur=()=>DSL[dsi]||DSL[0],csCur=()=>CSL[csi]||CSL[0],tsCur=()=>TS[tsi]||TS[0];
 const uid=()=>'s'+Math.random().toString(36).slice(2,8);
-const NEWS=['به‌روزرسانی خودکار همراه با اعلان تازه‌ها','برچسب مختصات با خط راهنمای منحنی، قابل کشیدن و تنظیم اندازه‌ی پیکان','ذخیره و ذخیره‌به‌عنوان؛ ادامه‌ی کار بعد از بستن برنامه','خروجی عکس یا PDF از بخشی از نقشه','تغییر سبک، فونت و اندازه روی نوشته‌های قبلی هم اعمال می‌شود','دایمنشن: مقدار بعد از نقطه‌ی دوم نشان داده می‌شود','انگشت دوم هنگام ذره‌بین: روشن و خاموش کردن اسنپ','متن‌های ریز بدون بزرگ‌نمایی هم دیده می‌شوند','پنجره‌ی پایین قابل جمع‌شدن و کشیدن به بالا','اصلاح نمایش متن‌های فارسی','نسخه‌ی ۱٫۳٫۱: انتخاب با ضربه‌ی تکی مطمئن‌تر شد، برچسب مختصات را می‌توان از هر جا کشید و فونت روی حروف لاتین هم اثر می‌گذارد','نسخه‌ی ۱٫۴: دایره و خط بی‌نهایت','ابزارهای ویرایش: پاک‌کن، تریم، اکستند، بریک، فیلت، چمفر، آفست، منفجر، جابجایی و کپی','دو حالت: خواندنی (فقط نمایش و اندازه‌گیری) و ویرایش','دکمه‌ی بستن نقشه با پرسش ذخیره؛ دیگر ذخیره‌ی خودکار انجام نمی‌شود','متن‌های کوچک خواناتر و بدون پرش','تنظیمات بخش‌بندی شد','پنل پایین هنگام ترسیم و ویرایش جمع می‌شود'];
+const NEWS=['به‌روزرسانی خودکار همراه با اعلان تازه‌ها','برچسب مختصات با خط راهنمای منحنی، قابل کشیدن و تنظیم اندازه‌ی پیکان','ذخیره و ذخیره‌به‌عنوان؛ ادامه‌ی کار بعد از بستن برنامه','خروجی عکس یا PDF از بخشی از نقشه','تغییر سبک، فونت و اندازه روی نوشته‌های قبلی هم اعمال می‌شود','دایمنشن: مقدار بعد از نقطه‌ی دوم نشان داده می‌شود','انگشت دوم هنگام ذره‌بین: روشن و خاموش کردن اسنپ','متن‌های ریز بدون بزرگ‌نمایی هم دیده می‌شوند','پنجره‌ی پایین قابل جمع‌شدن و کشیدن به بالا','اصلاح نمایش متن‌های فارسی','نسخه‌ی ۱٫۳٫۱: انتخاب با ضربه‌ی تکی مطمئن‌تر شد، برچسب مختصات را می‌توان از هر جا کشید و فونت روی حروف لاتین هم اثر می‌گذارد','نسخه‌ی ۱٫۴: دایره و خط بی‌نهایت','ابزارهای ویرایش: پاک‌کن، تریم، اکستند، بریک، فیلت، چمفر، آفست، منفجر، جابجایی و کپی','دو حالت: خواندنی (فقط نمایش و اندازه‌گیری) و ویرایش','دکمه‌ی بستن نقشه با پرسش ذخیره؛ دیگر ذخیره‌ی خودکار انجام نمی‌شود','متن‌های کوچک خواناتر و بدون پرش','تنظیمات بخش‌بندی شد','پنل پایین هنگام ترسیم و ویرایش جمع می‌شود','نسخه‌ی ۱٫۵: باز شدن مستقیم فایل DWG (تبدیل خودکار به DXF)','راهنمای هر ابزار پشت دکمه‌ی ⓘ؛ بار اول خودکار نشان داده می‌شود','ورود مختصات با صفحه‌کلید برای همه‌ی ابزارهای ترسیم (مطلق، نسبی، فاصله و زاویه)','اسنپ‌های تازه: عمود، تقاطع، ربع دایره، نزدیک‌ترین نقطه','اندازه‌گذاری بعد از درج قابل کشیدن و ویرایش است','خط راهنمای منحنی پویا و گزینه‌ی پس‌زمینه برای متن مختصات','اندازه و بزرگ‌نمایی ذره‌بین قابل تنظیم','گوشه‌های گرد متناسب با صفحه، جلوه‌ی لمس دکمه‌ها و آیکون‌های تازه'];
 
 /* ---- متن ---- */
 function paintText(t,s,sx,sy,col,halo){
@@ -886,6 +921,9 @@ function paintText(t,s,sx,sy,col,halo){
   let str;if(t._k===S.ptxt&&t._fs!==undefined)str=t._fs;else{str=fixFa(t.s,t.mine);t._fs=str;t._k=S.ptxt}
   const lines=str.split('\n'),lh=px*1.35,n=lines.length;let off=0;
   if(t.av==='middle')off=-(n-1)*lh/2;else if(t.av==='bottom')off=-(n-1)*lh;
+  if(S.cbg&&t.ann&&t.ann.kind==='coord'&&px>=3){let mw=0;for(const l of lines)mw=Math.max(mw,g.measureText(l).width);
+    const pd=px*0.16,x0=t.ah==='center'?-mw/2:t.ah==='right'?-mw:0,a0=t.av==='middle'?px*0.62:t.av==='bottom'?px*1.0:px*0.88;
+    g.fillStyle=S.dark?'rgba(11,13,16,.92)':'rgba(255,255,255,.94)';g.fillRect(x0-pd,off-a0-pd*0.4,mw+pd*2,(n-1)*lh+px*1.2+pd*0.8);g.fillStyle=col}
   if(halo){g.lineJoin='round';g.lineWidth=Math.max(2,px*0.28);g.strokeStyle=S.dark?'#0b0d10':'#ffffff';for(let i=0;i<n;i++)g.strokeText(lines[i],0,off+i*lh)}
   for(let i=0;i<n;i++)g.fillText(lines[i],0,off+i*lh);
   g.restore()}
@@ -918,6 +956,8 @@ function pushHist(kind,items,extra){hist.push(Object.assign({kind,items},extra||
 function undo(){const h=hist.pop();if(!h)return;
   if(h.kind==='add')h.items.forEach(o=>setDel(o,true));else if(h.kind==='del')h.items.forEach(o=>setDel(o,false));
   else if(h.kind==='mv'){h.a.tp=h.from;regen(h.a)}
+  else if(h.kind==='dpt'){h.a.pts[h.i]=h.from;regen(h.a)}
+  else if(h.kind==='dprop'){Object.assign(h.a,h.from);regen(h.a)}
   else if(h.kind==='edit'){h.adds.forEach(o=>setDel(o,true));h.dels.forEach(o=>setDel(o,false))}
   updUndo();sel=null;selSet=[];renderPanel();req();flash('برگردانده شد');dirty()}
 function expandAnn(list){const out=new Set(list);for(const o of list)if(o.ann)for(const x of o.ann.objs)out.add(x);return [...out]}
@@ -952,6 +992,9 @@ function selPanel(){let h='';
     for(const o of items){const k=o.isAnn?({dim:'دایمنشن',coord:'برچسب مختصات',text:'متن'}[o.kind]):(o.s!==undefined?'متن':o.info.type);c[k]=(c[k]||0)+1}
     for(const o of selSet)if(o.s===undefined&&!o.ann)len+=entInfo(o).len;
     h+=row('تعداد انتخاب',items.size,'big')+row('جمع طول',f(len))+`<div class="sn" dir="ltr">${Object.entries(c).map(([k,v])=>k+'×'+v).join(' , ')}</div>`;
+    {const dA=[...new Set(selSet.map(o=>o.ann).filter(a=>a&&a.kind==='dim'))];
+     if(dA.length===1&&S.mode!=='view'){h+='<div class="hint">برای تغییر اندازه، دایره‌های روی نقطه‌های اندازه‌گذاری را بکشید: آبی = نقطه‌های اندازه‌گیری، زرد = محل خط اندازه.</div>'
+       +btns([['v5:dimedit','✎ تغییر استایل و حالت اندازه']])}}
     if(selSet.some(o=>o.ann&&o.ann.kind==='coord'&&o.ann.tp))h+='<div class="hint">برای جابه‌جایی متن مختصات، دایره‌ی زردِ کنار متن را بکشید.</div>'}
   return h+btns([['delset','🗑 حذف انتخاب‌شده‌ها',!selSet.length,1],['selall','انتخاب همه'],['clear','لغو انتخاب',!selSet.length]].concat(S.mode==='view'?[]:[['ed:mvgo','✥ جابجایی',!selSet.length],['ed:cpgo','⧉ کپی',!selSet.length]]))}
 
@@ -1052,9 +1095,13 @@ function coordGeo(a){
   else{
     const T=a.tp,sg=T.x>=p.x?1:-1,E={x:T.x-sg*h*.3,y:T.y},A=h*(cs.ar>0?cs.ar:1),dx=E.x-p.x,dy=E.y-p.y,L=Math.hypot(dx,dy)||1;
     let f=[p.x,p.y,E.x,E.y],ux=dx/L,uy=dy/L;
-    if(cs.leader==='spline'){const c={x:(p.x+E.x)/2-dy*(cs.cv||.25),y:(p.y+E.y)/2+dx*(cs.cv||.25)};f=[];
-      for(let q=0;q<=24;q++){const t=q/24,u=1-t;f.push(u*u*p.x+2*u*t*c.x+t*t*E.x,u*u*p.y+2*u*t*c.y+t*t*E.y)}
-      const tl=Math.hypot(c.x-p.x,c.y-p.y)||1;ux=(c.x-p.x)/tl;uy=(c.y-p.y)/tl}
+    if(cs.leader==='spline'){
+      // منحنی پویا: از نقطه شروع می‌شود، به سمت جابجایی کمان می‌زند و افقی وارد متن می‌شود؛ با جهت کشیدن تغییر می‌کند
+      const k=(cs.cv>=0?cs.cv:.25)*2,nx=-dy/L*sg,ny=dx/L*sg,bend=L*k;
+      const C1={x:p.x+dx*.35+nx*bend*.6,y:p.y+dy*.35+ny*bend*.6},C2={x:E.x-sg*Math.min(L*.45,h*14),y:E.y};
+      f=[];for(let q=0;q<=28;q++){const t=q/28,u=1-t,b0=u*u*u,b1=3*u*u*t,b2=3*u*t*t,b3=t*t*t;
+        f.push(b0*p.x+b1*C1.x+b2*C2.x+b3*E.x,b0*p.y+b1*C1.y+b2*C2.y+b3*E.y)}
+      const tl=Math.hypot(C1.x-p.x,C1.y-p.y)||1;ux=(C1.x-p.x)/tl;uy=(C1.y-p.y)/tl}
     polys.push({f,closed:false});const ar=arrowPts(p.x,p.y,ux,uy,A,'arrow');polys.push({f:ar.f,closed:true});
     txts.push({x:T.x,y:T.y,z,h,s:str,rot:0,ah:sg>0?'left':'right',av:'middle',f:ts.font,xs:ts.xs})}
   return {polys,txts,col:0xffa500,h}}
@@ -1079,12 +1126,17 @@ function coordPanel(tent){
 function textGrab(p){
   if(tool==='coord'&&tent&&csCur().leader!=='none'){const T=tentT||defTp(tent,tsById(csCur().ts).h||autoH());const [a,b]=w2s(T.x,T.y);if(Math.hypot(a-p.x,b-p.y)<44)return {k:'prev'}}
   if(tool==='sel'){for(const A of DB.anns){if(A.kind==='coord'&&A.tp&&!A.del){const [a,b]=w2s(A.tp.x,A.tp.y);if(Math.hypot(a-p.x,b-p.y)<40)return {k:'ann',a:A}}}}
+  if(tool==='sel'&&S.mode!=='view'){const seen=new Set();for(const o of selSet){const A=o.ann;if(A&&A.kind==='dim'&&!seen.has(A)){seen.add(A);
+    for(let i=0;i<A.pts.length;i++){const [a,b]=w2s(A.pts[i].x,A.pts[i].y);if(Math.hypot(a-p.x,b-p.y)<30)return {k:'dimp',a:A,i}}}}}
   return null}
-function startDrag(dg){dragT=dg;if(dg.k==='ann'){dg.from={x:dg.a.tp.x,y:dg.a.tp.y};dg.a.objs.forEach(o=>o.del=true)}req()}
-function moveDrag(p){const [wx,wy]=s2w(p.x,p.y);if(dragT.k==='prev')tentT={x:wx,y:wy};else dragT.a.tp={x:wx,y:wy};req()}
-function cancelDrag(){if(!dragT)return;if(dragT.k==='ann'){dragT.a.tp=dragT.from;dragT.a.objs.forEach(o=>o.del=!!dragT.a.del)}dragT=null;req()}
+function startDrag(dg){dragT=dg;if(dg.k==='dimp'){dg.from={x:dg.a.pts[dg.i].x,y:dg.a.pts[dg.i].y,z:dg.a.pts[dg.i].z||0};dg.a.objs.forEach(o=>o.del=true)}if(dg.k==='ann'){dg.from={x:dg.a.tp.x,y:dg.a.tp.y};dg.a.objs.forEach(o=>o.del=true)}req()}
+function moveDrag(p){const [wx,wy]=s2w(p.x,p.y);if(dragT.k==='prev')tentT={x:wx,y:wy};
+  else if(dragT.k==='dimp'){const A=dragT.a,i=dragT.i,sn=(S.snap&&((A.dk==='dal'||A.dk==='dli')&&i<2))?snapAt(p.x,p.y):{x:wx,y:wy,z:A.pts[i].z||0};A.pts[i]={x:sn.x,y:sn.y,z:sn.z||0}}
+  else dragT.a.tp={x:wx,y:wy};req()}
+function cancelDrag(){if(!dragT)return;if(dragT.k==='dimp'){dragT.a.pts[dragT.i]=dragT.from;dragT.a.objs.forEach(o=>o.del=!!dragT.a.del)}if(dragT.k==='ann'){dragT.a.tp=dragT.from;dragT.a.objs.forEach(o=>o.del=!!dragT.a.del)}dragT=null;req()}
 function endDrag(ok){const d=dragT;if(!d)return;if(!ok){cancelDrag();return}dragT=null;
   if(d.k==='ann'){const a=d.a,to={x:a.tp.x,y:a.tp.y};regen(a);selSet=a.objs.slice();pushHist('mv',[],{a,from:d.from,to})}
+  if(d.k==='dimp'){const a=d.a;regen(a);selSet=a.objs.slice();pushHist('dpt',[],{a,i:d.i,from:d.from})}
   renderPanel();req()}
 
 /* ---- گروه‌های ابزار ---- */
@@ -1100,15 +1152,15 @@ const TN={exp:'خروجی'};GROUPS.forEach(G=>{if(G.t)TN[G.t]=G.nm;(G.items||[])
 let openG=null;
 function buildTools(){const T=$('tools');T.innerHTML='';
   if(S.mode==='view'){const mg=GROUPS.find(x=>x.id==='meas'),L=[['pan','✋','حرکت']].concat(mg.items);
-    L.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=t===tool?'on':'';b.innerHTML=`<i>${ic}</i>${nm}`;b.onclick=()=>setTool(t);T.appendChild(b)});return}
+    L.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=t===tool?'on':'';b.innerHTML=`<i>${IC(t,ic)}</i>${nm}`;b.onclick=()=>setTool(t);T.appendChild(b)});return}
   GROUPS.forEach(G=>{const b=document.createElement('button');
     const act=G.t?tool===G.t:(G.items||[]).some(i=>i[0]===tool);
     b.className=(act?'on ':'')+(openG===G.id?'open':'');
-    b.innerHTML=`<i>${G.ic}${G.items?'<sup>▾</sup>':''}</i>${act&&!G.t?TN[tool]:G.nm}`;
+    b.innerHTML=`<i>${IC(G.t||('g_'+G.id),G.ic)}${G.items?'<sup>▾</sup>':''}</i>${act&&!G.t?TN[tool]:G.nm}`;
     b.onclick=()=>{if(G.t){setTool(G.t);return}openG=(openG===G.id)?null:G.id;buildTools();buildSub()};T.appendChild(b)})}
 function buildSub(){const B=$('sub');if(S.mode==='view'||!openG){B.style.display='none';return}
   const G=GROUPS.find(x=>x.id===openG);B.style.display='flex';B.innerHTML='';
-  G.items.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=(t===tool?'on':'');b.innerHTML=`<i>${ic}</i>${nm}`;
+  G.items.forEach(([t,ic,nm])=>{const b=document.createElement('button');b.className=(t===tool?'on':'');b.innerHTML=`<i>${IC(t,ic)}</i>${nm}`;
     b.onclick=()=>{openG=null;if(t==='@ds')openDS();else if(t==='@ts')openTS();else if(t==='@cs')openCS();else setTool(t);buildTools();buildSub()};B.appendChild(b)})}
 function setTool(t){if(S.mode==='view'&&!VIEW_OK[t])t='pan';const keep=(t==='mov'||t==='cpy');tool=t;pts=[];tent=null;tentT=null;sel=null;if(!keep)selSet=[];dimArc=null;box=null;hover=null;openG=null;dragT=null;edReset();S.pmin=PMIN.has(t);document.body.classList.toggle('slim',PMIN.has(t));buildTools();buildSub();renderPanel();req()}
 function syncChips(){document.querySelectorAll('#chips button').forEach(b=>b.classList.toggle('on',!!S[b.dataset.c]))}
@@ -1138,9 +1190,10 @@ function overlayExtra(live,pts,tent){
         const P=o.pts;if(P.length===2){const [a,b]=w2s(P[0],P[1]);g.moveTo(a+7,b);g.arc(a,b,7,0,7);continue}
         let [a,b]=w2s(P[0],P[1]);g.moveTo(a,b);for(let i=2;i<P.length;i+=2){[a,b]=w2s(P[i],P[i+1]);g.lineTo(a,b)}if(o.closed)g.closePath()}
       g.stroke();g.setLineDash([]);
-      const seen=new Set();for(const o of selSet){const A=o.ann;if(A&&A.kind==='coord'&&A.tp&&!seen.has(A)){seen.add(A);const [a,b]=w2s(A.tp.x,A.tp.y);g.beginPath();g.arc(a,b,12,0,7);g.fillStyle='rgba(255,210,63,.25)';g.fill();g.stroke()}}
+      const seen=new Set();for(const o of selSet){const A=o.ann;if(A&&A.kind==='coord'&&A.tp&&!seen.has(A)){seen.add(A);const [a,b]=w2s(A.tp.x,A.tp.y);g.beginPath();g.arc(a,b,12,0,7);g.fillStyle='rgba(255,210,63,.25)';g.fill();g.stroke()}
+        if(A&&A.kind==='dim'&&tool==='sel'&&!seen.has(A)){seen.add(A);A.pts.forEach((q,i)=>{const [a,b]=w2s(q.x,q.y);g.beginPath();g.arc(a,b,11,0,7);g.fillStyle=i<2&&A.pts.length>2?'rgba(62,166,255,.28)':'rgba(255,210,63,.28)';g.fill();g.stroke()})}}
       g.restore()}
-    if(dragT&&dragT.k==='ann'){const gg=annGeo(dragT.a);if(gg)paintGeo(gg,'#ffd23f')}
+    if(dragT&&(dragT.k==='ann'||dragT.k==='dimp')){const gg=annGeo(dragT.a);if(gg)paintGeo(gg,'#ffd23f')}
     if(box){const x=Math.min(box.x0,box.x1),y=Math.min(box.y0,box.y1),w=Math.abs(box.x1-box.x0),hh=Math.abs(box.y1-box.y0),cr=box.x1<box.x0;
       g.save();g.fillStyle=cr?'rgba(51,194,127,.18)':'rgba(62,166,255,.18)';g.strokeStyle=cr?'#33c27f':'#3ea6ff';g.lineWidth=1.5;if(cr)g.setLineDash([7,5]);
       g.fillRect(x,y,w,hh);g.strokeRect(x,y,w,hh);g.restore()}}
@@ -1168,7 +1221,7 @@ function openTS(){
   <div class="fl"><label>فونت</label><select id="tsFont">${opts(FONTS,t.font)}</select></div>
   <div class="fl"><label>ارتفاع (۰ = خودکار)</label><input type="number" id="tsH" step="any" value="${t.h}"></div>
   <div class="fl"><label>ضریب عرض</label><input type="number" id="tsX" step="any" value="${t.xs}"></div>
-  <div id="tsPrev" style="margin:10px 0;padding:10px;border:1px dashed var(--line);border-radius:8px;font-size:24px;text-align:center;font-family:${fontCss(t.font)}">نمونه‌ی متن ۱۲۳٫۴۵ — ایستگاه مبنا</div>
+  <div id="tsPrev" style="margin:10px 0;padding:10px;border:1px dashed var(--line);border-radius:var(--r);font-size:24px;text-align:center;font-family:${fontCss(t.font)}">نمونه‌ی متن ۱۲۳٫۴۵ — ایستگاه مبنا</div>
   <div class="sn">تغییرها روی نوشته‌های قبلی هم اعمال می‌شود (اگر ارتفاع را صفر نگذارید، همه یک اندازه می‌شوند).</div>
   <div class="btns"><button id="tsNew">＋ استایل جدید</button><button id="tsDel" ${TS.length<2?'disabled':''}>حذف</button><button class="pri" id="tsOk">بستن</button></div>`);
   const b=$('sheetBox');
@@ -1638,7 +1691,7 @@ const VIEW_OK={pan:1,id:1,dist:1,area:1,angle:1,prop:1,exp:1};
 const PMIN=new Set(['line','pl','arc','circ','xl','era','trm','ext','brk','fil','chm','off','xpl','mov','cpy','coord','text','dal','dli','darc','dord']);
 function applyMode(){const v=S.mode==='view';
   document.body.classList.toggle('viewmode',v);
-  const b=$('bMode');if(b){b.textContent=v?'👁':'✏️';b.title=v?'حالت خواندنی (برای ویرایش بزنید)':'حالت ویرایش (برای خواندن بزنید)'}
+  const b=$('bMode');if(b){b.innerHTML=_ic(v?ICONS.eye:ICONS.pen);b.title=v?'حالت خواندنی (برای ویرایش بزنید)':'حالت ویرایش (برای خواندن بزنید)'}
   const u=$('bUndo');if(u)u.style.display=v?'none':'';
   buildTools();buildSub()}
 function viewAuto(){
@@ -1671,12 +1724,13 @@ function openSettings(tab){
   let b='';
   if(setTab==='disp')b=L('تعداد رقم اعشار',`<select id="sDec">${[0,1,2,3,4,5,6].map(n=>`<option ${n===S.dec?'selected':''}>${n}</option>`).join('')}</select>`)+CK('sD','پس‌زمینه‌ی تیره',S.dark)
     +L('حالت برنامه',`<select id="sMode">${opts({edit:'ویرایش',view:'خواندنی (فقط نمایش و اندازه‌گیری)'},S.mode)}</select>`)
+    +L('اندازه‌ی ذره‌بین',`<select id="sLps">${opts({s:'کوچک',m:'متوسط',l:'بزرگ'},S.lps)}</select>`)+L('بزرگ‌نمایی ذره‌بین',`<select id="sLpz">${opts({3:'۳ برابر',4:'۴ برابر',6:'۶ برابر',8:'۸ برابر',10:'۱۰ برابر',14:'۱۴ برابر'},S.lpz)}</select>`)
     +L('حداقل اندازه‌ی متن روی صفحه',`<select id="sMin">${opts({0:'خاموش',6:'۶ پیکسل',8:'۸ پیکسل',10:'۱۰ پیکسل',12:'۱۲ پیکسل',14:'۱۴ پیکسل'},S.minTxt)}</select>`)
     +'<div class="sn">متن‌های ریزتر از این اندازه، با لبه‌ی روشن و بدون روی هم افتادن بزرگ می‌شوند؛ متن‌های خیلی ریز و شلوغ دیده نمی‌شوند تا بزرگ‌نمایی کنید.</div>';
-  else if(setTab==='txt')b=L('فونت متن‌های نقشه',`<select id="sFont">${opts(FONTS,S.font)}</select>`)+L('فونت حروف لاتین و اعداد انگلیسی',`<select id="sLat">${opts(LATS,S.lat)}</select>`)
+  else if(setTab==='txt')b=CK('sCbg','پس‌زمینه برای متن مختصات (فقط به اندازه‌ی خود متن؛ خوانایی در جاهای شلوغ)',S.cbg)+L('فونت متن‌های نقشه',`<select id="sFont">${opts(FONTS,S.font)}</select>`)+L('فونت حروف لاتین و اعداد انگلیسی',`<select id="sLat">${opts(LATS,S.lat)}</select>`)
     +L('ترتیب حروف فارسی',`<select id="sPtx">${opts({normal:'عادی',rev:'وارونه (اگر متن برعکس دیده می‌شود)'},S.ptxt)}</select>`)
     +'<div class="sn">فونت‌های فارسی فقط حروف فارسی و عدد را عوض می‌کنند؛ برای حروف لاتین فونت جدا انتخاب کنید.</div>';
-  else if(setTab==='snap')b=CK('sSnap','فعال بودن اسنپ',S.snap)+CK('sE','اسنپ به انتها / رأس / نقطه‌ی درج',S.snapE)+CK('sM','اسنپ به وسط',S.snapM)+CK('sC','اسنپ به مرکز دایره/کمان',S.snapC);
+  else if(setTab==='snap')b=CK('sSnap','فعال بودن اسنپ',S.snap)+CK('sE','اسنپ به انتها / رأس / نقطه‌ی درج',S.snapE)+CK('sM','اسنپ به وسط',S.snapM)+CK('sC','اسنپ به مرکز دایره/کمان',S.snapC)+CK('sPt','اسنپ به نقطه (POINT) و نقطه‌ی درج',S.snapPt)+CK('sP','اسنپ عمود (از نقطه‌ی قبلی روی خط)',S.snapP)+CK('sX','اسنپ تقاطع',S.snapX)+CK('sQ','اسنپ ربع دایره (چهار نقطه‌ی اصلی)',S.snapQ)+CK('sN','اسنپ نزدیک‌ترین نقطه روی شیء',S.snapN)+'<div class="sn">اسنپ‌های عمود و تقاطع وقتی کار می‌کنند که اسنپ کلی روشن باشد. اسنپ عمود بعد از نقطه‌ی اول فعال می‌شود.</div>';
   else if(setTab==='sty')b='<div class="btns"><button id="sDS">🎨 استایل دایمنشن</button><button id="sTS">🔤 استایل متن</button><button id="sCS">🧭 سبک مختصات</button></div>';
   else if(setTab==='file')b='<div class="btns"><button id="xMine">💾 ذخیره‌ی ترسیم‌ها و متن‌های من</button><button id="xAll">💾 ذخیره‌ی کل نقشه (ساده‌شده)</button></div><div class="sn">خروجی، فایل DXF متنی است و در اتوکد باز می‌شود. اگر گوشی پنجره‌ی اشتراک‌گذاری باز کرد، «ذخیره در فایل‌ها» را بزنید.</div><h3 style="margin-top:14px">گزارش فایل</h3>'+(DB?reportHTML():'<div class="sn">فایلی باز نیست</div>');
   else b=`<div class="ver" style="text-align:right">نسخه‌ی ${APP_VER}</div><ul style="padding-right:18px;line-height:1.9">${NEWS.map(x=>'<li>'+x+'</li>').join('')}</ul>`;
@@ -1686,6 +1740,7 @@ function openSettings(tab){
   bx.onchange=()=>{const g2=id=>$(id);
     if(g2('sDec'))S.dec=+g2('sDec').value;if(g2('sSnap'))S.snap=g2('sSnap').checked;if(g2('sE'))S.snapE=g2('sE').checked;if(g2('sM'))S.snapM=g2('sM').checked;if(g2('sC'))S.snapC=g2('sC').checked;
     if(g2('sD'))S.dark=g2('sD').checked;if(g2('sFont'))S.font=g2('sFont').value;if(g2('sLat'))S.lat=g2('sLat').value;if(g2('sPtx'))S.ptxt=g2('sPtx').value;if(g2('sMin'))S.minTxt=+g2('sMin').value;
+    if(g2('sCbg'))S.cbg=g2('sCbg').checked;if(g2('sPt'))S.snapPt=g2('sPt').checked;if(g2('sP'))S.snapP=g2('sP').checked;if(g2('sX'))S.snapX=g2('sX').checked;if(g2('sQ'))S.snapQ=g2('sQ').checked;if(g2('sN'))S.snapN=g2('sN').checked;if(g2('sLps'))S.lps=g2('sLps').value;if(g2('sLpz'))S.lpz=+g2('sLpz').value;
     if(g2('sMode')&&g2('sMode').value!==S.mode){S.mode=g2('sMode').value;setTool('pan');applyMode()}
     syncChips();saveCfg();renderPanel();req()};
   const ex=only=>{if(!DB)return msg('ذخیره','ابتدا یک فایل باز کنید.');const base=(fileName||'map').replace(/\.[^.]+$/,'');saveText(base+(only?'-markup':'-edit')+'.dxf',buildDXF(only))};
@@ -1694,7 +1749,281 @@ function openSettings(tab){
 $('bSet').onclick=()=>openSettings('disp');
 setDirtyUI();
 
-buildTools();syncChips();loadFonts();$('ver').textContent='v'+APP_VER;
+/* ================= تبدیل DWG به DXF با libredwg (آزمایشی) ================= */
+const DWG_URLS=['https://cdn.jsdelivr.net/npm/@mlightcad/libredwg-web@0.7.4/+esm'];
+let _lib=null;
+async function getLibreDwg(log){
+  if(_lib)return _lib;
+  let mod=null;
+  for(const u of DWG_URLS){try{log('بارگیری موتور تبدیل…');mod=await import(u);break}catch(e){log('ناموفق: '+u+' — '+(e&&e.message||e))}}
+  if(!mod||!mod.LibreDwg)throw new Error('موتور تبدیل بارگیری نشد (بار اول اینترنت لازم است)');
+  _lib=await mod.LibreDwg.create();return _lib}
+function stripDxfSections(t,names){
+  for(const nm of names){
+    let guard=0;
+    for(;;){
+      const m=new RegExp('\\n\\s*0\\r?\\nSECTION\\r?\\n\\s*2\\r?\\n'+nm+'\\r?\\n').exec(t);
+      if(!m||++guard>5)break;
+      const s=m.index,e=t.indexOf('ENDSEC',s+m[0].length);if(e<0)break;
+      const e2=t.indexOf('\n',e);t=t.slice(0,s)+(e2<0?'':t.slice(e2))}}
+  return t}
+
+
+function fixLayers(t){
+  const m=/\n\s*0\r?\nTABLE\r?\n\s*2\r?\nLAYER\r?\n/.exec(t);if(!m)return t;
+  const s=m.index,e=t.indexOf('ENDTAB',s);if(e<0)return t;
+  const body=t.slice(s,e).replace(/(\n *62\r?\n) *-(\d+)/g,'$1$2');
+  return t.slice(0,s)+body+t.slice(e)}
+function dxfReport(t){
+  const L=t.split(/\r\n|\r|\n/);let sec='',cnt={},secLines={};
+  for(let i=0;i+1<L.length;i+=2){
+    const c=L[i].trim(),v=L[i+1].trim();
+    if(c==='0'){if(v==='SECTION'){sec='?'}else if(v==='ENDSEC'){sec=''}else if(sec&&sec!=='?'){const k=sec+':'+v;cnt[k]=(cnt[k]||0)+1}}
+    else if(c==='2'&&sec==='?')sec=v;
+    if(sec&&sec!=='?')secLines[sec]=(secLines[sec]||0)+1}
+  const top=Object.entries(cnt).filter(([k])=>/^(ENTITIES|BLOCKS)/.test(k)).sort((a,b)=>b[1]-a[1]).slice(0,14).map(([k,v])=>k+' = '+v);
+  return 'بخش‌ها (تعداد جفت‌خط): '+Object.entries(secLines).map(([k,v])=>k+':'+v).join('، ')+'\n'+top.join('\n')}
+function entCount(t){
+  const m=/\n\s*0\r?\nSECTION\r?\n\s*2\r?\nENTITIES\r?\n/.exec(t);if(!m)return -1;
+  const s=m.index+m[0].length,e=t.indexOf('ENDSEC',s);if(e<0)return -1;
+  const body=t.slice(s,e);return (('\n'+body).match(/\n *0\r?\n[A-Z]/g)||[]).length}
+function rescueModelSpace(t){
+  const m=/\n\s*0\r?\nSECTION\r?\n\s*2\r?\nENTITIES\r?\n/.exec(t);if(!m)return t;
+  const s=m.index+m[0].length,e=t.indexOf('ENDSEC',s);if(e<0)return t;
+  const names=['*Model_Space','*MODEL_SPACE'];let bi=-1;
+  for(const n of names){const re=new RegExp('\\n\\s*2\\r?\\n'+n.replace('*','\\*')+'\\r?\\n');const mm=re.exec(t);if(mm){bi=mm.index+mm[0].length;break}}
+  if(bi<0)return t;
+  const a=t.slice(bi).search(/\n *0\r?\n[A-Z]/);if(a<0)return t;
+  const from=bi+a,to=t.indexOf('\n  0\nENDBLK',from);if(to<0)return t;
+  const body=t.slice(from,to);if(body.length<20)return t;
+  return t.slice(0,s)+body.replace(/^\r?\n/,'')+'\n'+t.slice(e)}
+window.dlDxf=function(){try{const b=new Blob([window._lastDxf],{type:'application/dxf'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=window._lastDxfName||'converted.dxf';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500)}catch(e){alert(e)}};
+async function convertDwg(buf,name){
+  const t0=performance.now();
+  const ov=document.createElement('div');ov.id='dwgov';
+  ov.innerHTML='<div class="dbox"><div class="dspin"></div><div id="dwgt"></div><div id="dwgs"></div></div>';document.body.appendChild(ov);
+  const upd=s=>{$('dwgt').textContent='در حال تبدیل DWG به DXF… '+Math.floor((performance.now()-t0)/1000)+' ثانیه';if(s)$('dwgs').textContent=s};
+  upd('آماده‌سازی…');const tm=setInterval(()=>upd(),400);const logs=[];const log=s=>{logs.push(((performance.now()-t0)/1000).toFixed(1)+'s '+s);upd(s)};
+  const yieldUI=()=>new Promise(r=>setTimeout(r,40));
+  try{
+    await yieldUI();
+    const lib=await getLibreDwg(log);
+    log('تبدیل (موتور)…');await yieldUI();
+    let out=lib.dwg_write_dxf(buf);
+    if(!out||!out.length){
+      log('تلاش دوباره با خواندن جدا…');
+      const FT=(typeof lib.constructor.Dwg_File_Type!=='undefined')?lib.constructor.Dwg_File_Type.DWG:0;
+      try{const d=lib.dwg_read_data(buf,FT);if(d&&lib.dwg_free)lib.dwg_free(d)}catch(_){}
+      out=lib.dwg_write_dxf(buf)}
+    if(!out||!out.length)throw new Error('موتور DXF نساخت (فایل پشتیبانی نمی‌شود یا خراب است)');
+    log('DXF خام: '+Math.round(out.length/1024)+' کیلوبایت');await yieldUI();
+    let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(out)}catch(_){text=new TextDecoder('windows-1256').decode(out)}
+    const n0=text.length;/* بدون حذف */
+    log('پس از حذف بخش‌های غیرلازم: '+Math.round(text.length/1024)+' کیلوبایت (از '+Math.round(n0/1024)+')');await yieldUI();
+    text=fixLayers(text);log('رنگ لایه‌ها اصلاح شد (موتور آن‌ها را خاموش نوشته بود)');
+    const ec0=entCount(text);log('تعداد موجودیت در بخش ENTITIES: '+ec0);
+    if(ec0<1){const t2=rescueModelSpace(text);const ec1=entCount(t2);log('پس از بازیابی از فضای مدل: '+ec1);if(ec1>ec0)text=t2}
+    const nm=name.replace(/\.dwg$/i,'')+'.dxf';
+    const bytes=new TextEncoder().encode(text);
+    window._lastDxf=bytes;window._lastDxfName=nm;
+    openBuffer(bytes.buffer,nm);
+    let ext='';
+    if(DB&&DB.prims.length){
+      const P=DB.prims.filter(p=>p.bb&&isFinite(p.bb[0]+p.bb[1]+p.bb[2]+p.bb[3]));
+      const xs=P.map(p=>(p.bb[0]+p.bb[2])/2).sort((a,b)=>a-b),ys=P.map(p=>(p.bb[1]+p.bb[3])/2).sort((a,b)=>a-b);
+      const q=(a,f)=>a[Math.min(a.length-1,Math.max(0,Math.floor(a.length*f)))];
+      let X0=1e300,Y0=1e300,X1=-1e300,Y1=-1e300;for(const p of P){X0=Math.min(X0,p.bb[0]);Y0=Math.min(Y0,p.bb[1]);X1=Math.max(X1,p.bb[2]);Y1=Math.max(Y1,p.bb[3])}
+      const r0=q(xs,.02),r1=q(xs,.98),t0=q(ys,.02),t1=q(ys,.98);
+      ext='کل: x '+X0.toFixed(1)+'..'+X1.toFixed(1)+'  y '+Y0.toFixed(1)+'..'+Y1.toFixed(1)+'\nبیشترِ اشیا: x '+r0.toFixed(1)+'..'+r1.toFixed(1)+'  y '+t0.toFixed(1)+'..'+t1.toFixed(1)+'\n';
+      const fw=Math.max(X1-X0,Y1-Y0),rw=Math.max(r1-r0,t1-t0,1e-6);
+      if(fw>rw*4){ // اشیای دورافتاده: نمای اولیه را روی بیشترِ اشیا بگذار
+        const w=Math.max(r1-r0,1e-6),h=Math.max(t1-t0,1e-6);
+        view.s=Math.min(W/w,H/h)*0.9;view.cx=(r0+r1)/2;view.cy=(t0+t1)/2;req();ext+='(نمای اولیه روی بیشترِ اشیا گذاشته شد؛ اشیای دورافتاده هستند)\n'}}
+    if(DB&&DB.prims.length===0){
+      let rep='';try{rep=dxfReport(text)}catch(e){rep=String(e)}
+      msg('گزارش تشخیصی تبدیل','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(ext+'prims='+DB.prims.length+' texts='+(DB.texts?DB.texts.length:'?')+' layers='+(DB.layers?DB.layers.length:'?')+'\n'+rep+'\n\nskipped: '+JSON.stringify(DB.skipped||{})+'\n\n'+logs.join('\n'))+'</div><div class="btns"><button onclick="dlDxf()">ذخیره‌ی DXF تبدیل‌شده</button></div>')}
+    if(DB){isDirty=true;setDirtyUI();flash('تبدیل شد ('+((performance.now()-t0)/1000).toFixed(1)+' ثانیه)')}
+  }catch(err){
+    msg('تبدیل ناموفق بود','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(String(err&&err.message||err))+'\n\n'+esc(logs.join('\n'))+'</div>')}
+  finally{clearInterval(tm);ov.remove()}}
+
+
+/* ================= نسخه‌ی ۱٫۵ ================= */
+
+/* ---- آیکون‌های خطی ---- */
+const _ic=(d,x)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+(x||'')+'</svg>';
+const ICONS={
+ pan:'<path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 3.6-2.6 6-6 6-2.6 0-4.1-1-5.6-3L3.4 13.6a1.5 1.5 0 0 1 2.4-1.8L8 14"/>',
+ g_meas:'<path d="M3 17 17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/>',
+ id:'<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.3"/>',
+ dist:'<circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="5" r="2.2"/><path d="M6.6 17.4 17.4 6.6"/>',
+ area:'<path d="M4 8.5 12 4l8 5.5-3 10H7z"/>',
+ angle:'<path d="M4 19h16M4 19 15 6"/><path d="M11 19a7 7 0 0 0-2-5"/>',
+ prop:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/>',
+ g_dim:'<path d="M3 12h18M3 8v8M21 8v8"/><path d="M7 9.5 3.5 12 7 14.5M17 9.5l3.5 2.5-3.5 2.5"/>',
+ dal:'<path d="M4 17 17 4"/><path d="M3 14l7 7M14 3l7 7"/>',
+ dli:'<path d="M3 12h18M3 8v8M21 8v8"/>',
+ darc:'<path d="M4.5 17a9 9 0 0 1 15 0"/><path d="M4.5 17 3.5 20.5M19.5 17l1 3.5"/>',
+ dord:'<path d="M5 4v16M5 12h14"/><path d="M16 9.5 19.5 12 16 14.5"/>',
+ '@ds':'<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/><path d="M12 21c-2 0-2-2 0-3 2-1 4 0 5-2"/>',
+ g_draw:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+ line:'<circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="5" r="1.6"/><path d="M6.3 17.7 17.7 6.3"/>',
+ pl:'<path d="M3.5 17 9 8l5 7 6.5-9.5"/>',
+ arc:'<path d="M4 18C4 10 10 5 20 6"/><circle cx="4" cy="18" r="1.5"/><circle cx="20" cy="6" r="1.5"/>',
+ circ:'<circle cx="12" cy="12" r="8"/>',
+ xl:'<path d="M2 19 22 5"/><path d="M7 4l-1.5 3M18 17l1.5 3" stroke-dasharray="1 0"/>',
+ g_edit:'<circle cx="6" cy="7" r="2.6"/><circle cx="6" cy="17" r="2.6"/><path d="M8 8.6 20 18M8 15.4 20 6"/>',
+ era:'<path d="M15.5 3.5 21 9l-9.5 10.5H6L3 16.5z"/><path d="M9 7l8 8M8 21h13"/>',
+ trm:'<path d="M3 12h7M14 12h7M12 3v18"/><path d="M10 9l4 6" stroke-dasharray="0.1 3"/>',
+ ext:'<path d="M3 12h13M12 8l4 4-4 4M20 5v14"/>',
+ brk:'<path d="M3 12h6M15 12h6M9 8l-2 8M15 8l-2 8"/>',
+ fil:'<path d="M5 4v8a8 8 0 0 0 8 8h7"/>',
+ chm:'<path d="M5 4v8l8 8h7"/>',
+ off:'<path d="M4 18 14 4M10 21 20 7"/>',
+ xpl:'<path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>',
+ mov:'<path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
+ cpy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+ g_ins:'<path d="M3.5 19 9.5 5l6 14M6 14h7"/><path d="M19 5v6M16 8h6"/>',
+ coord:'<circle cx="12" cy="12" r="3"/><path d="M12 3v5M12 16v5M3 12h5M16 12h5"/>',
+ text:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+ '@cs':'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+ '@ts':'<path d="M4 18 9 6l5 12M6 14h6M17 9h4M19 9v9"/>',
+ g_sel:'<rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3.2 3"/><path d="m11 11 7 2-3 1.5L13 18z" fill="currentColor"/>',
+ open:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+ pen:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+ save:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>',
+ close:'<path d="M6 6l12 12M18 6 6 18"/>',
+ gear:'<circle cx="12" cy="12" r="3.3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+ kb:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+ info:'<circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".5" fill="currentColor"/>'
+};
+function IC(k,fb){return ICONS[k]?_ic(ICONS[k]):(fb||'')}
+function applyHeaderIcons(){
+  const set=(id,k,txt)=>{const b=$(id);if(b)b.innerHTML=_ic(ICONS[k])+(txt?'<span>'+txt+'</span>':'')};
+  set('bOpen','open','باز');set('bUndo','undo');set('bSave','save');set('bClose','close');set('bSet','gear');set('bMode',S.mode==='view'?'eye':'pen')}
+
+/* ---- اسنپ‌های پویا: عمود، تقاطع، ربع، نزدیک‌ترین نقطه ---- */
+let FORCEP=null;
+function snapRef(){
+  if(pts.length&&(tool==='dist'||tool==='area'||tool==='line'||tool==='pl'||tool==='xl'||tool==='mov'||tool==='cpy'||tool==='dal'||tool==='dli'||tool==='angle'))return pts[pts.length-1];
+  return null}
+function segInter(a,b,c,d){
+  const r={x:b.x-a.x,y:b.y-a.y},s={x:d.x-c.x,y:d.y-c.y},den=r.x*s.y-r.y*s.x;if(Math.abs(den)<1e-12)return null;
+  const t=((c.x-a.x)*s.y-(c.y-a.y)*s.x)/den,u=((c.x-a.x)*r.y-(c.y-a.y)*r.x)/den;
+  if(t<-1e-9||t>1+1e-9||u<-1e-9||u>1+1e-9)return null;return {x:a.x+t*r.x,y:a.y+t*r.y}}
+function dynSnap(wx,wy,R,limit){
+  if(!DB||!S.snap||!(S.snapP||S.snapX||S.snapQ||S.snapN))return null;
+  const rw=R/view.s,x0=wx-rw,x1=wx+rw,y0=wy-rw,y1=wy+rw,ref=S.snapP?snapRef():null,segs=[],arcs=[];
+  let best=null,bd=limit;
+  const cand=(x,y,t,pen)=>{const raw=Math.hypot(x-wx,y-wy)*view.s;if(raw>R)return;const d=raw+pen;if(d<bd){bd=d;best={x,y,z:0,t}}};
+  for(const p of DB.prims){
+    if(!p.L.on||p.del||p.info.xl)continue;const b=p.bb;if(b[0]>x1||b[2]<x0||b[1]>y1||b[3]<y0)continue;
+    const P=p.pts,n=P.length;
+    if(n>=4){const m=p.closed?n:n-2;
+      for(let i=0;i<m&&segs.length<90;i+=2){const j=(i+2)%n;
+        if(distSeg(wx,wy,P[i],P[i+1],P[j],P[j+1])<=rw)segs.push({a:{x:P[i],y:P[i+1]},b:{x:P[j],y:P[j+1]}})}}
+    const ex=p.info.ex;if(S.snapQ&&ex&&(ex.t==='C'||ex.t==='A')&&arcs.length<20)arcs.push(ex)}
+  for(const s of segs){
+    if(S.snapN){const dx=s.b.x-s.a.x,dy=s.b.y-s.a.y,l=dx*dx+dy*dy;let t=l?((wx-s.a.x)*dx+(wy-s.a.y)*dy)/l:0;t=Math.max(0,Math.min(1,t));cand(s.a.x+t*dx,s.a.y+t*dy,'r',6)}
+    if(ref){const dx=s.b.x-s.a.x,dy=s.b.y-s.a.y,l=dx*dx+dy*dy;if(l>1e-18){const t=((ref.x-s.a.x)*dx+(ref.y-s.a.y)*dy)/l;if(t>=0&&t<=1)cand(s.a.x+t*dx,s.a.y+t*dy,'p',2)}}}
+  if(S.snapX){const L=Math.min(segs.length,40);for(let i=0;i<L;i++)for(let j=i+1;j<L;j++){const q=segInter(segs[i].a,segs[i].b,segs[j].a,segs[j].b);if(q)cand(q.x,q.y,'x',1)}}
+  for(const ex of arcs){const c=ex.c,r=ex.r;
+    for(let k=0;k<4;k++){const ang=k*90;let ok=ex.t==='C';
+      if(!ok){let a0=ex.a0,a1=ex.a1;if(a1<a0)a1+=360;let aa=ang;if(aa<a0)aa+=360;ok=aa<=a1+1e-6}
+      if(ok)cand(c[0]+r*Math.cos(ang*Math.PI/180),c[1]+r*Math.sin(ang*Math.PI/180),'q',3)}}
+  return best}
+
+/* ---- ورود مختصات با صفحه‌کلید ---- */
+const KB_TOOLS={id:1,dist:1,area:1,angle:1,line:1,pl:1,arc:1,circ:1,xl:1,text:1,coord:1,dal:1,dli:1,dord:1,mov:1,cpy:1};
+const pnum=s=>{if(s===undefined||s===null)return NaN;s=String(s).trim();if(!s)return NaN;
+  s=s.replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[٫،,]/g,'.').replace(/[−–]/g,'-').replace(/\s/g,'');return parseFloat(s)};
+let KB={m:'abs',u:'deg'};
+function placePoint(pt){
+  const [sx,sy]=w2s(pt.x,pt.y);
+  if(sx<24||sx>W-24||sy<24||sy>H-24){view.cx=pt.x;view.cy=pt.y}
+  const [a,b]=w2s(pt.x,pt.y);FORCEP=pt;
+  try{onTap(a,b)}finally{FORCEP=null}
+  const cb=document.querySelector('#panel button[data-a="confirm"]');if(cb&&!cb.disabled)cb.click();
+  renderPanel();req()}
+function coordEntry(){
+  if(!DB)return;
+  const ref=snapRefAny();
+  const row=(id,t,v)=>`<div class="fl"><label>${t}</label><input type="text" inputmode="decimal" id="${id}" value="${v===undefined?'':v}" dir="ltr" style="flex:0 0 170px;width:170px"></div>`;
+  const tabs=`<div class="tabs"><button data-km="abs" class="${KB.m==='abs'?'on':''}">مطلق</button><button data-km="rel" class="${KB.m==='rel'?'on':''}">نسبی</button><button data-km="pol" class="${KB.m==='pol'?'on':''}">فاصله و زاویه</button></div>`;
+  let b='';
+  if(KB.m==='abs')b=row('kX','X (شرق)',ref?f(ref.x):'')+row('kY','Y (شمال)',ref?f(ref.y):'')+row('kZ','Z (ارتفاع، اختیاری)','');
+  else if(KB.m==='rel')b=(ref?'':'<div class="sn">نقطه‌ی قبلی وجود ندارد؛ از مبدأ (۰ و ۰) محاسبه می‌شود.</div>')+row('kX','ΔX نسبت به نقطه‌ی قبلی','')+row('kY','ΔY نسبت به نقطه‌ی قبلی','')+row('kZ','ΔZ (اختیاری)','');
+  else b=(ref?'':'<div class="sn">نقطه‌ی قبلی وجود ندارد؛ از مبدأ (۰ و ۰) محاسبه می‌شود.</div>')+row('kD','فاصله','')+row('kA','آزیموت (از شمال، ساعتگرد)','')
+    +`<div class="fl"><label>یکای زاویه</label><select id="kU"><option value="deg" ${KB.u==='deg'?'selected':''}>درجه</option><option value="gon" ${KB.u==='gon'?'selected':''}>گراد</option></select></div>`+row('kZ','ΔZ (اختیاری)','');
+  openSheet(`<h3>ورود مختصات با صفحه‌کلید</h3>${tabs}${b}<div class="btns"><button class="pri" id="kOk">✓ ثبت نقطه</button><button id="kNx">ثبت و نقطه‌ی بعدی</button><button id="kNo">بستن</button></div>`);
+  const bx=$('sheetBox');
+  bx.querySelectorAll('[data-km]').forEach(t=>t.onclick=()=>{KB.m=t.dataset.km;coordEntry()});
+  if($('kU'))$('kU').onchange=()=>{KB.u=$('kU').value};
+  const calc=()=>{
+    const r=ref||{x:0,y:0,z:0};let x,y,z=pnum($('kZ')&&$('kZ').value);
+    if(KB.m==='abs'){x=pnum($('kX').value);y=pnum($('kY').value);if(isNaN(z))z=0}
+    else if(KB.m==='rel'){const dx=pnum($('kX').value),dy=pnum($('kY').value);x=r.x+dx;y=r.y+dy;z=(r.z||0)+(isNaN(z)?0:z)}
+    else{const d=pnum($('kD').value);let a=pnum($('kA').value);if(KB.u==='gon')a=a*0.9;a=a*Math.PI/180;x=r.x+d*Math.sin(a);y=r.y+d*Math.cos(a);z=(r.z||0)+(isNaN(z)?0:z)}
+    if(!isFinite(x)||!isFinite(y)){flash('عددها را درست بنویسید');return null}
+    return {x,y,z:isNaN(z)?0:z}};
+  $('kOk').onclick=()=>{const p=calc();if(!p)return;$('sheet').style.display='none';placePoint(p)};
+  $('kNx').onclick=()=>{const p=calc();if(!p)return;placePoint(p);coordEntry()};
+  $('kNo').onclick=()=>{$('sheet').style.display='none'}}
+function snapRefAny(){const r=snapRef();if(r)return r;if(pts.length)return pts[pts.length-1];return null}
+
+/* ---- راهنمای ⓘ و دکمه‌ی ⌨ بالای پنل ---- */
+let HON=false,_lastTool=null;
+function hintSeen(){try{return JSON.parse(localStorage.getItem('mv_hs')||'{}')}catch(_){return {}}}
+function panelExtras(){
+  const P=$('panel');if(!P||P.style.display==='none')return;
+  const gr=P.querySelector('.grab');if(!gr)return;
+  const hasHint=!!P.querySelector('.hint');
+  if(tool!==_lastTool){_lastTool=tool;const sn=hintSeen();HON=!sn[tool]&&hasHint;sn[tool]=1;try{localStorage.setItem('mv_hs',JSON.stringify(sn))}catch(_){}}
+  P.classList.toggle('hon',HON);
+  let h='';
+  if(S.mode!=='view'||tool==='dist'||tool==='area'||tool==='angle'||tool==='id'){if(KB_TOOLS[tool]&&(tool!=='darc'))h+=`<button class="pbt" data-x="kb" title="ورود مختصات با صفحه‌کلید">${_ic(ICONS.kb)}</button>`}
+  if(hasHint)h+=`<button class="pbt ${HON?'on':''}" data-x="info" title="راهنما">${_ic(ICONS.info)}</button>`;
+  if(h){const d=document.createElement('div');d.className='pbtns';d.innerHTML=h;gr.appendChild(d);
+    d.onclick=e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();
+      if(b.dataset.x==='kb')coordEntry();else{HON=!HON;P.classList.toggle('hon',HON);b.classList.toggle('on',HON)}};
+    d.addEventListener('pointerdown',e=>e.stopPropagation())}}
+
+/* ---- ویرایش اندازه‌گذاری بعد از درج ---- */
+function v5Act(a){
+  if(a==='dimedit'){
+    const A=[...new Set(selSet.map(o=>o.ann).filter(x=>x&&x.kind==='dim'))][0];if(!A)return;
+    const dsO={};DSL.forEach(d=>dsO[d.id]=d.name);
+    openSheet(`<h3>ویرایش اندازه‌گذاری</h3><div class="fl"><label>استایل</label><select id="vDs">${opts(dsO,A.ds)}</select></div>`
+      +(A.dk==='dli'?`<div class="fl"><label>جهت اندازه</label><select id="vMd">${opts({auto:'خودکار',h:'افقی',v:'عمودی'},A.mode||'auto')}</select></div>`:'')
+      +'<div class="sn">برای جابه‌جا کردن نقطه‌ها یا خط اندازه، دایره‌های رنگی روی نقشه را بکشید.</div><div class="btns"><button class="pri" id="vOk">بستن</button></div>');
+    const ch=()=>{const from={ds:A.ds,mode:A.mode};A.ds=$('vDs').value;if($('vMd'))A.mode=$('vMd').value==='auto'?undefined:$('vMd').value;
+      regen(A);selSet=A.objs.slice();pushHist('dprop',[],{a:A,from});req()};
+    $('sheetBox').onchange=ch;$('vOk').onclick=()=>{$('sheet').style.display='none';renderPanel()}}}
+
+/* ---- بالن خوش‌آمد ---- */
+function showWelcome(){
+  let seen=null;try{seen=localStorage.getItem('mv_wel')}catch(_){}
+  if(seen||DB)return;
+  const d=document.createElement('div');d.id='wel';
+  d.innerHTML=`<b>خوش آمدید 👋</b>
+  <ol><li>دکمه‌ی «باز» (بالا، سمت راست) را بزنید و فایل نقشه را انتخاب کنید.</li>
+  <li>فایل DXF مستقیم باز می‌شود. فایل DWG خودکار به DXF تبدیل می‌شود؛ بار اول اینترنت لازم است و بعد از آن بدون اینترنت هم کار می‌کند.</li>
+  <li>برای ذخیره‌ی تبدیل‌شده یا تغییرات، دکمه‌ی 💾 را بزنید؛ دفعه‌ی بعد از فهرست «نقشه‌های ذخیره‌شده» باز می‌شود.</li>
+  <li>حالت ✏️ / 👁 بالای صفحه: در حالت خواندنی چیزی تغییر نمی‌کند.</li>
+  <li>راهنمای هر ابزار پشت دکمه‌ی ⓘ بالای پنل پایین است.</li></ol>
+  <button class="pri" id="welOk">فهمیدم</button>`;
+  document.body.appendChild(d);
+  const close=()=>{try{localStorage.setItem('mv_wel','1')}catch(_){}d.remove()};
+  $('welOk').onclick=close;setTimeout(()=>{const f=$('file');if(f)f.addEventListener('change',close,{once:true})},0)}
+
+/* ---- جلوه‌ی لمس دکمه‌ها ---- */
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest?e.target.closest('button'):null;
+  if(!b||b.disabled)return;b.classList.remove('pls');void b.offsetWidth;b.classList.add('pls');setTimeout(()=>b.classList.remove('pls'),420);
+  if(navigator.vibrate)try{navigator.vibrate(6)}catch(_){}},true);
+
+buildTools();syncChips();loadFonts();$('ver').textContent='v'+APP_VER;applyHeaderIcons();showWelcome();
 (async()=>{try{const k=localStorage.getItem('mv_resume');if(k){localStorage.removeItem('mv_resume');await loadSaved(k,'r:');isDirty=true;setDirtyUI()}}catch(_){}refreshSaved();showNews()})();
 
 /* ---- file ---- */
@@ -1708,7 +2037,7 @@ function setDB(d,name){d.anns=[];DB=d;fileName=name;tool='pan';pts=[];tent=null;
 function openBuffer(buf,name){
   const u8=new Uint8Array(buf),head=String.fromCharCode.apply(null,u8.subarray(0,22));
   if(head.startsWith('AutoCAD Binary DXF'))return msg('DXF باینری','این DXF از نوع باینری است. هنگام ذخیره/تبدیل، گزینه‌ی <b>ASCII DXF</b> را انتخاب کنید.');
-  if(/^AC10\d\d/.test(head))return msg('فایل DWG است','مرورگر نمی‌تواند DWG را مستقیم باز کند. فایل را با <b>ODA File Converter</b> (رایگان، روی کامپیوتر) یا هر مبدل دیگر به <b>ASCII DXF</b> (ترجیحاً نسخه‌ی R2000 یا 2004) تبدیل کنید و همان را اینجا باز کنید.');
+  if(/^AC10\d\d/.test(head))return convertDwg(buf,name);
   let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(u8)}catch(_){try{text=new TextDecoder('windows-1256').decode(u8)}catch(__){text=new TextDecoder('utf-8').decode(u8)}}
   if(!/^\s*0\s*\n\s*SECTION/m.test(text.slice(0,2000)))return msg('فرمت نامعتبر','این فایل شبیه DXF متنی نیست.');
   const D=parseDXF(text);D.srcText=text;setDB(D,name);}
