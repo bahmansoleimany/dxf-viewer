@@ -1762,7 +1762,7 @@ async function convertDwg(buf,name){
     if(!out||!out.length)throw new Error('موتور DXF نساخت (فایل پشتیبانی نمی‌شود یا خراب است)');
     log('DXF خام: '+Math.round(out.length/1024)+' کیلوبایت');await yieldUI();
     let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(out)}catch(_){text=new TextDecoder('windows-1256').decode(out)}
-    const n0=text.length;text=stripDxfSections(text,['OBJECTS','CLASSES','ACDSDATA','THUMBNAILIMAGE']);
+    const n0=text.length;/* بدون حذف */
     log('پس از حذف بخش‌های غیرلازم: '+Math.round(text.length/1024)+' کیلوبایت (از '+Math.round(n0/1024)+')');await yieldUI();
     const ec0=entCount(text);log('تعداد موجودیت در بخش ENTITIES: '+ec0);
     if(ec0<1){const t2=rescueModelSpace(text);const ec1=entCount(t2);log('پس از بازیابی از فضای مدل: '+ec1);if(ec1>ec0)text=t2}
@@ -1770,9 +1770,9 @@ async function convertDwg(buf,name){
     const bytes=new TextEncoder().encode(text);
     window._lastDxf=bytes;window._lastDxfName=nm;
     openBuffer(bytes.buffer,nm);
-    if(DB&&DB.prims&&DB.prims.length===0){
+    if(DB){
       let rep='';try{rep=dxfReport(text)}catch(e){rep=String(e)}
-      msg('نقشه خالی خوانده شد','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(rep+'\n\nskipped: '+JSON.stringify(DB.skipped||{})+'\n\n'+logs.join('\n'))+'</div><div class="btns"><button onclick="dlDxf()">ذخیره‌ی DXF تبدیل‌شده</button></div>')}
+      msg('گزارش تشخیصی تبدیل','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc('prims='+DB.prims.length+' texts='+(DB.texts?DB.texts.length:'?')+' layers='+(DB.layers?DB.layers.length:'?')+'\n'+rep+'\n\nskipped: '+JSON.stringify(DB.skipped||{})+'\n\n'+logs.join('\n'))+'</div><div class="btns"><button onclick="dlDxf()">ذخیره‌ی DXF تبدیل‌شده</button></div>')}
     if(DB){isDirty=true;setDirtyUI();flash('تبدیل شد ('+((performance.now()-t0)/1000).toFixed(1)+' ثانیه)')}
   }catch(err){
     msg('تبدیل ناموفق بود','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(String(err&&err.message||err))+'\n\n'+esc(logs.join('\n'))+'</div>')}
