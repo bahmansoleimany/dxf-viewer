@@ -1717,6 +1717,31 @@ function stripDxfSections(t,names){
       const s=m.index,e=t.indexOf('ENDSEC',s+m[0].length);if(e<0)break;
       const e2=t.indexOf('\n',e);t=t.slice(0,s)+(e2<0?'':t.slice(e2))}}
   return t}
+
+function dxfReport(t){
+  const L=t.split(/\r\n|\r|\n/);let sec='',cnt={},secLines={};
+  for(let i=0;i+1<L.length;i+=2){
+    const c=L[i].trim(),v=L[i+1].trim();
+    if(c==='0'){if(v==='SECTION'){sec='?'}else if(v==='ENDSEC'){sec=''}else if(sec&&sec!=='?'){const k=sec+':'+v;cnt[k]=(cnt[k]||0)+1}}
+    else if(c==='2'&&sec==='?')sec=v;
+    if(sec&&sec!=='?')secLines[sec]=(secLines[sec]||0)+1}
+  const top=Object.entries(cnt).filter(([k])=>/^(ENTITIES|BLOCKS)/.test(k)).sort((a,b)=>b[1]-a[1]).slice(0,14).map(([k,v])=>k+' = '+v);
+  return 'بخش‌ها (تعداد جفت‌خط): '+Object.entries(secLines).map(([k,v])=>k+':'+v).join('، ')+'\n'+top.join('\n')}
+function entCount(t){
+  const m=/\n\s*0\r?\nSECTION\r?\n\s*2\r?\nENTITIES\r?\n/.exec(t);if(!m)return -1;
+  const s=m.index+m[0].length,e=t.indexOf('ENDSEC',s);if(e<0)return -1;
+  const body=t.slice(s,e);return (('\n'+body).match(/\n *0\r?\n[A-Z]/g)||[]).length}
+function rescueModelSpace(t){
+  const m=/\n\s*0\r?\nSECTION\r?\n\s*2\r?\nENTITIES\r?\n/.exec(t);if(!m)return t;
+  const s=m.index+m[0].length,e=t.indexOf('ENDSEC',s);if(e<0)return t;
+  const names=['*Model_Space','*MODEL_SPACE'];let bi=-1;
+  for(const n of names){const re=new RegExp('\\n\\s*2\\r?\\n'+n.replace('*','\\*')+'\\r?\\n');const mm=re.exec(t);if(mm){bi=mm.index+mm[0].length;break}}
+  if(bi<0)return t;
+  const a=t.slice(bi).search(/\n *0\r?\n[A-Z]/);if(a<0)return t;
+  const from=bi+a,to=t.indexOf('\n  0\nENDBLK',from);if(to<0)return t;
+  const body=t.slice(from,to);if(body.length<20)return t;
+  return t.slice(0,s)+body.replace(/^\r?\n/,'')+'\n'+t.slice(e)}
+window.dlDxf=function(){try{const b=new Blob([window._lastDxf],{type:'application/dxf'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=window._lastDxfName||'converted.dxf';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500)}catch(e){alert(e)}};
 async function convertDwg(buf,name){
   const t0=performance.now();
   const ov=document.createElement('div');ov.id='dwgov';
@@ -1739,9 +1764,15 @@ async function convertDwg(buf,name){
     let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(out)}catch(_){text=new TextDecoder('windows-1256').decode(out)}
     const n0=text.length;text=stripDxfSections(text,['OBJECTS','CLASSES','ACDSDATA','THUMBNAILIMAGE']);
     log('پس از حذف بخش‌های غیرلازم: '+Math.round(text.length/1024)+' کیلوبایت (از '+Math.round(n0/1024)+')');await yieldUI();
+    const ec0=entCount(text);log('تعداد موجودیت در بخش ENTITIES: '+ec0);
+    if(ec0<1){const t2=rescueModelSpace(text);const ec1=entCount(t2);log('پس از بازیابی از فضای مدل: '+ec1);if(ec1>ec0)text=t2}
     const nm=name.replace(/\.dwg$/i,'')+'.dxf';
     const bytes=new TextEncoder().encode(text);
+    window._lastDxf=bytes;window._lastDxfName=nm;
     openBuffer(bytes.buffer,nm);
+    if(DB&&DB.prims&&DB.prims.length===0){
+      let rep='';try{rep=dxfReport(text)}catch(e){rep=String(e)}
+      msg('نقشه خالی خوانده شد','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(rep+'\n\nskipped: '+JSON.stringify(DB.skipped||{})+'\n\n'+logs.join('\n'))+'</div><div class="btns"><button onclick="dlDxf()">ذخیره‌ی DXF تبدیل‌شده</button></div>')}
     if(DB){isDirty=true;setDirtyUI();flash('تبدیل شد ('+((performance.now()-t0)/1000).toFixed(1)+' ثانیه)')}
   }catch(err){
     msg('تبدیل ناموفق بود','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(String(err&&err.message||err))+'\n\n'+esc(logs.join('\n'))+'</div>')}
