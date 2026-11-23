@@ -1718,6 +1718,12 @@ function stripDxfSections(t,names){
       const e2=t.indexOf('\n',e);t=t.slice(0,s)+(e2<0?'':t.slice(e2))}}
   return t}
 
+
+function fixLayers(t){
+  const m=/\n\s*0\r?\nTABLE\r?\n\s*2\r?\nLAYER\r?\n/.exec(t);if(!m)return t;
+  const s=m.index,e=t.indexOf('ENDTAB',s);if(e<0)return t;
+  const body=t.slice(s,e).replace(/(\n *62\r?\n) *-(\d+)/g,'$1$2');
+  return t.slice(0,s)+body+t.slice(e)}
 function dxfReport(t){
   const L=t.split(/\r\n|\r|\n/);let sec='',cnt={},secLines={};
   for(let i=0;i+1<L.length;i+=2){
@@ -1764,6 +1770,7 @@ async function convertDwg(buf,name){
     let text;try{text=new TextDecoder('utf-8',{fatal:true}).decode(out)}catch(_){text=new TextDecoder('windows-1256').decode(out)}
     const n0=text.length;/* بدون حذف */
     log('پس از حذف بخش‌های غیرلازم: '+Math.round(text.length/1024)+' کیلوبایت (از '+Math.round(n0/1024)+')');await yieldUI();
+    text=fixLayers(text);log('رنگ لایه‌ها اصلاح شد (موتور آن‌ها را خاموش نوشته بود)');
     const ec0=entCount(text);log('تعداد موجودیت در بخش ENTITIES: '+ec0);
     if(ec0<1){const t2=rescueModelSpace(text);const ec1=entCount(t2);log('پس از بازیابی از فضای مدل: '+ec1);if(ec1>ec0)text=t2}
     const nm=name.replace(/\.dwg$/i,'')+'.dxf';
@@ -1782,7 +1789,7 @@ async function convertDwg(buf,name){
       if(fw>rw*4){ // اشیای دورافتاده: نمای اولیه را روی بیشترِ اشیا بگذار
         const w=Math.max(r1-r0,1e-6),h=Math.max(t1-t0,1e-6);
         view.s=Math.min(W/w,H/h)*0.9;view.cx=(r0+r1)/2;view.cy=(t0+t1)/2;req();ext+='(نمای اولیه روی بیشترِ اشیا گذاشته شد؛ اشیای دورافتاده هستند)\n'}}
-    if(DB){
+    if(DB&&DB.prims.length===0){
       let rep='';try{rep=dxfReport(text)}catch(e){rep=String(e)}
       msg('گزارش تشخیصی تبدیل','<div class="sn" style="direction:ltr;text-align:left;user-select:text;white-space:pre-wrap;word-break:break-all">'+esc(ext+'prims='+DB.prims.length+' texts='+(DB.texts?DB.texts.length:'?')+' layers='+(DB.layers?DB.layers.length:'?')+'\n'+rep+'\n\nskipped: '+JSON.stringify(DB.skipped||{})+'\n\n'+logs.join('\n'))+'</div><div class="btns"><button onclick="dlDxf()">ذخیره‌ی DXF تبدیل‌شده</button></div>')}
     if(DB){isDirty=true;setDirtyUI();flash('تبدیل شد ('+((performance.now()-t0)/1000).toFixed(1)+' ثانیه)')}
